@@ -1,6 +1,6 @@
-name: polyassistant
-description: "Application de ressources pédagogiques pour étudiants"
-version: 1.0.0+1
+name: miabeassistant
+description: "Miabe Assistant - Votre compagnon de réussite académique pour tous les étudiants du Togo"
+version: 2.0.0+1
 
 environment:
   sdk: ^3.9.2

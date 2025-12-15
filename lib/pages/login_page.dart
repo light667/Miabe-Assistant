@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:polyassistant/services/firebase/auth.dart';
+import 'package:miabeassistant/services/firebase/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:package_info_plus/package_info_plus.dart';

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:polyassistant/services/firebase/auth.dart';
+import 'package:miabeassistant/services/firebase/auth.dart';
 import 'package:provider/provider.dart';
-import 'package:polyassistant/providers/theme_provider.dart';
+import 'package:miabeassistant/providers/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

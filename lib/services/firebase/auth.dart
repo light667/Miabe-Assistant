@@ -1,9 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_web_auth/flutter_web_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class Auth {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -56,7 +53,7 @@ class Auth {
       }
     } catch (e) {
       if (kDebugMode) {
-        print("Erreur Google Sign-In: $e");
+        print('Erreur Google Sign-In: $e');
       }
       rethrow;
     }
@@ -92,13 +89,21 @@ class Auth {
 
   Future<UserCredential?> signInWithGitHub() async {
     try {
-      const clientId = "Ov23lisp9CxpO1uOAY7H";
-      const clientSecret = "9f44ec56471457918afe3b3eb5d6a11be7265ac5";
+      // IMPORTANT: Ne jamais exposer le client secret dans le code
+      // Le client secret doit être stocké de manière sécurisée sur un backend
+      // Pour l'instant, cette fonctionnalité est désactivée pour des raisons de sécurité
+      throw FirebaseAuthException(
+        code: 'ERROR_NOT_IMPLEMENTED',
+        message: 'La connexion GitHub nécessite une configuration backend sécurisée',
+      );
 
+      // TODO: Implémenter un backend sécurisé pour gérer l'authentification GitHub
+      /*
+      const clientId = 'Ov23lisp9CxpO1uOAY7H';
       final result = await FlutterWebAuth.authenticate(
         url:
-            "https://github.com/login/oauth/authorize?client_id=$clientId&scope=read:user%20user:email",
-        callbackUrlScheme: "https",
+            'https://github.com/login/oauth/authorize?client_id=$clientId&scope=read:user%20user:email',
+        callbackUrlScheme: 'https',
       );
 
       final code = Uri.parse(result).queryParameters['code'];
@@ -106,12 +111,13 @@ class Auth {
         throw Exception('Code GitHub non reçu');
       }
 
+      // Le client secret doit être utilisé côté serveur uniquement
       final response = await http.post(
-        Uri.parse("https://github.com/login/oauth/access_token"),
+        Uri.parse('https://github.com/login/oauth/access_token'),
         headers: {'Accept': 'application/json'},
         body: {
           'client_id': clientId,
-          'client_secret': clientSecret,
+          'client_secret': clientSecret, // À faire côté serveur
           'code': code,
         },
       );
@@ -124,9 +130,10 @@ class Auth {
       final accessToken = responseBody['access_token'];
       final githubAuthCredential = GithubAuthProvider.credential(accessToken);
       return await _firebaseAuth.signInWithCredential(githubAuthCredential);
+      */
     } catch (e) {
       if (kDebugMode) {
-        print("Erreur GitHub Sign-In: $e");
+        print('Erreur GitHub Sign-In: $e');
       }
       rethrow;
     }

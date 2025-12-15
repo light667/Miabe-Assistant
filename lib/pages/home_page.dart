@@ -3,9 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:polyassistant/pages/chat_page.dart';
-import 'package:polyassistant/pages/resources_page.dart';
-import 'package:polyassistant/pages/settings_page.dart';
+import 'package:miabeassistant/pages/chat_page.dart';
+import 'package:miabeassistant/pages/resources_page.dart';
+import 'package:miabeassistant/pages/settings_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -19,7 +19,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   String _pseudo = 'Utilisateur';
 
-  final List<Widget> _pages =  <Widget>[
+  final List<Widget> _pages = const <Widget>[
     HomeContent(),
     ChatPage(title: 'Chat'),
     ResourcesPage(),
@@ -77,12 +77,22 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'PolyAssistant',
+          'Science de l\'Ingénieur - Miabe',
           style: TextStyle(
             color: Theme.of(context).colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          // Department switcher button
+          IconButton(
+            icon: const Icon(Icons.apps),
+            tooltip: 'Changer de département',
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/department_selection');
+            },
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -456,7 +466,7 @@ class HomeContent extends StatelessWidget {
               ).animate().fadeIn(duration: 2800.ms).slideY(),
               Center(
                 child: Text(
-                  'Explorez et réussissez avec PolyAssistant !',
+                  'Explorez et réussissez avec Miabe Assistant !',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(
                       context,

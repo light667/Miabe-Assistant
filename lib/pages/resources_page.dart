@@ -4,7 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:url_launcher/url_launcher.dart';
 
 class ResourcesPage extends StatefulWidget {
-  const ResourcesPage({Key? key}) : super(key: key);
+  const ResourcesPage({super.key});
 
   @override
   _ResourcesPageState createState() => _ResourcesPageState();
@@ -47,7 +47,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors du chargement des ressources')),
+          const SnackBar(content: Text('Erreur lors du chargement des ressources')),
         );
       }
     }
@@ -64,7 +64,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Impossible d'ouvrir le PDF")));
+        ).showSnackBar(const SnackBar(content: Text("Impossible d'ouvrir le PDF")));
       }
     }
   }

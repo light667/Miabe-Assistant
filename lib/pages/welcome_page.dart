@@ -66,15 +66,13 @@ class WelcomePage extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: colorScheme.secondary.withValues(
-                                    alpha: 0.4,
-                                  ),
+                                  color: colorScheme.secondary.withValues(alpha: 0.4),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
                               ],
                             ),
-                            child: Icon(
+                            child: const Icon(
                               FontAwesomeIcons.graduationCap,
                               size: 70,
                               color: Colors.white,
@@ -98,8 +96,8 @@ class WelcomePage extends StatelessWidget {
                 ),
 
                 // Titre principal
-                Text(
-                      'PolyAssistant',
+                 Text(
+                      'Miabe Assistant',
                       style: textTheme.displayMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
@@ -122,8 +120,8 @@ class WelcomePage extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // Sous-titre
-                Text(
-                      "Votre compagnon de réussite à l'École Polytechnique de Lomé",
+                 Text(
+                      'Votre compagnon de réussite académique pour tous les étudiants du Togo',
                       style: textTheme.titleMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.95),
                         fontSize: 18,
@@ -157,17 +155,15 @@ class WelcomePage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           elevation: 8,
-                          shadowColor: colorScheme.secondary.withValues(
-                            alpha: 0.5,
-                          ),
+                          shadowColor: colorScheme.secondary.withValues(alpha: 0.5),
                           padding: const EdgeInsets.symmetric(vertical: 18),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.rocket_launch_rounded, size: 24),
-                            const SizedBox(width: 12),
-                            const Text(
+                            SizedBox(width: 12),
+                            Text(
                               'Commencer maintenant',
                               style: TextStyle(
                                 fontSize: 15,
@@ -208,12 +204,12 @@ class WelcomePage extends StatelessWidget {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 18),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.person_add_alt_1_rounded, size: 24),
-                            const SizedBox(width: 12),
-                            const Text(
+                            SizedBox(width: 12),
+                            Text(
                               'Créer un compte',
                               style: TextStyle(
                                 fontSize: 18,
@@ -304,7 +300,7 @@ class WelcomePage extends StatelessWidget {
 
                 // Footer
                 Text(
-                  'Rejoignez des milliers d’étudiants et boostez votre réussite !',
+                  'Rejoignez des milliers d\'étudiants et boostez votre réussite !',
                   style: textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.7),
                     fontStyle: FontStyle.italic,
