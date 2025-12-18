@@ -28,6 +28,14 @@ class MiabeLogo extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                primaryColor,
+                primaryColor.withValues(alpha: 0.8),
+              ],
+            ),
             boxShadow: [
               BoxShadow(
                 color: primaryColor.withValues(alpha: 0.3),
@@ -36,34 +44,11 @@ class MiabeLogo extends StatelessWidget {
               ),
             ],
           ),
-          child: ClipOval(
-            child: Image.asset(
-              'assets/images/miabe_logo.png',
-              fit: BoxFit.cover,
-              width: size,
-              height: size,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        primaryColor,
-                        primaryColor.withValues(alpha: 0.8),
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      FontAwesomeIcons.graduationCap,
-                      size: size * 0.5,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              },
+          child: Center(
+            child: Icon(
+              FontAwesomeIcons.graduationCap,
+              size: size * 0.5,
+              color: Colors.white,
             ),
           ),
         ),

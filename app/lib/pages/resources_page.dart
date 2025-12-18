@@ -61,7 +61,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
     // Fallback sur le manifest local
     try {
       final String response = await rootBundle.loadString(
-        'assets/resources_manifest_supabase.json',
+        'assets/resources_manifest_online.json',
       );
       final data = json.decode(response);
       if (mounted) {
