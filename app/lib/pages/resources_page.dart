@@ -25,6 +25,19 @@ class _ResourcesPageState extends State<ResourcesPage> {
   static const Color textPrimary = Color(0xFF212121);
   static const Color textSecondary = Color(0xFF757575);
 
+  // Mapping des noms techniques vers noms affichables
+  String _getFiliereDisplayName(String technicalName) {
+    const Map<String, String> displayNames = {
+      'lf_genie_civil': 'Génie Civil',
+      'lf_genie_electrique': 'Génie Électrique',
+      'lf_genie_mecanique': 'Génie Mécanique',
+      'lf_iabigdata': 'Intelligence Artificielle & Big Data',
+      'lf_informatiquesysteme': 'Informatique et Système',
+      'lf_logistiquetransport': 'Logistique et Transport',
+    };
+    return displayNames[technicalName] ?? technicalName.replaceAll('lf_', '').replaceAll('_', ' ');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -170,7 +183,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
         ),
         leading: Icon(Icons.school, color: primaryBlue, size: 24),
         title: Text(
-          filiere["name"].toUpperCase(),
+          _getFiliereDisplayName(filiere["name"]),
           style: TextStyle(
             color: textPrimary,
             fontWeight: FontWeight.bold,
