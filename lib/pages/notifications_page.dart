@@ -12,25 +12,26 @@ class NotificationsPage extends StatelessWidget {
         'title': 'Nouvelle ressource disponible',
         'description':
             'Cours de Mécanique du point mis à jour pour Semestre 1.',
-        'date': '13 sept. 2024',
+        'date': '15 dec. 2025',
       },
       {
         'title': 'Mise à jour de l\'app',
         'description': 'Version 1.1 avec mode sombre ajouté.',
-        'date': '12 sept. 2024',
-      },
-      {
-        'title': 'Notification test',
-        'description': 'Message de test pour les notifications.',
-        'date': '11 sept. 2024',
+        'date': '13 dec. 2025',
       },
     ];
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 56,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text('Notifications'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
+        elevation: 2,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

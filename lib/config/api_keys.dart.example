@@ -1,0 +1,11 @@
+/// Configuration des clés API et secrets de l'application
+/// COPIEZ CE FICHIER EN api_keys.dart ET REMPLISSEZ VOS CLÉS
+class ApiKeys {
+  // Clé API Mistral AI
+  // Obtenez votre clé sur : https://console.mistral.ai/
+  static const String mistralApiKey = 'YOUR_MISTRAL_API_KEY_HERE';
+  
+  // Autres clés API peuvent être ajoutées ici
+  // static const String openaiApiKey = 'your_openai_key';
+  // static const String googleApiKey = 'your_google_key';
+}

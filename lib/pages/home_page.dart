@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:miabeassistant/pages/chat_page.dart';
 import 'package:miabeassistant/pages/resources_page.dart';
 import 'package:miabeassistant/pages/settings_page.dart';
@@ -18,13 +19,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   String _pseudo = 'Utilisateur';
-
-  final List<Widget> _pages = const <Widget>[
-    HomeContent(),
-    ChatPage(title: 'Chat'),
-    ResourcesPage(),
-    SettingsPage(title: 'Paramètres'),
-  ];
+  String _selectedSkillCategory = 'Général'; // Catégorie sélectionnée pour les compétences
 
   @override
   void initState() {
@@ -34,18 +29,21 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadUserData() async {
     try {
+      // Récupérer le pseudo depuis Firebase Auth
+      final user = FirebaseAuth.instance.currentUser;
+      final firebasePseudo = user?.displayName;
+      
+      // Fallback sur SharedPreferences si pas de displayName
       final prefs = await SharedPreferences.getInstance();
-      final pseudo = prefs.getString('pseudo');
-      final filiere = prefs.getString('filiere');
-      final semestre = prefs.getString('semestre');
+      final storedPseudo = prefs.getString('pseudo');
 
       debugPrint(
-        'SharedPreferences - pseudo: $pseudo, filiere: $filiere, semestre: $semestre',
+        'Firebase pseudo: $firebasePseudo, Stored pseudo: $storedPseudo',
       );
 
       if (mounted) {
         setState(() {
-          _pseudo = pseudo ?? 'Utilisateur';
+          _pseudo = firebasePseudo ?? storedPseudo ?? 'Utilisateur';
         });
       }
     } catch (e) {
@@ -63,6 +61,21 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Widget _buildPage(int index) {
+    switch (index) {
+      case 0:
+        return HomeContent(pseudo: _pseudo);
+      case 1:
+        return const ChatPage(title: 'Chat');
+      case 2:
+        return const ResourcesPage();
+      case 3:
+        return const SettingsPage(title: 'Paramètres');
+      default:
+        return HomeContent(pseudo: _pseudo);
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -74,14 +87,23 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        toolbarHeight: 56,
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Science de l\'Ingénieur - Miabe',
+          'Science de l\'Ingénieur - Miabe Assistant',
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimary,
+            fontSize: 16,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : const Color(0xFF0444F4),
             fontWeight: FontWeight.bold,
           ),
+        ),
+        iconTheme: IconThemeData(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white
+              : const Color(0xFF0444F4),
         ),
         actions: [
           // Department switcher button
@@ -104,7 +126,7 @@ class _HomePageState extends State<HomePage> {
                 : [const Color(0xFFF3F4F6), const Color(0xFFBBDEFB)],
           ),
         ),
-        child: _pages[_selectedIndex].animate().fadeIn(duration: 400.ms),
+        child: _buildPage(_selectedIndex).animate().fadeIn(duration: 400.ms),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -143,26 +165,34 @@ class _HomePageState extends State<HomePage> {
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/profile');
-        },
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        tooltip: 'Voir le profil',
-        child: const FaIcon(FontAwesomeIcons.user, color: Colors.black),
-      ).animate().scale(delay: 1000.ms, duration: 300.ms),
+      floatingActionButton: _selectedIndex == 1 // Cacher le bouton sur la page du chatbot
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/profile');
+              },
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              tooltip: 'Voir le profil',
+              child: const FaIcon(FontAwesomeIcons.user, color: Colors.black),
+            ).animate().scale(delay: 1000.ms, duration: 300.ms),
     );
   }
 }
 
-class HomeContent extends StatelessWidget {
-  const HomeContent({super.key});
+class HomeContent extends StatefulWidget {
+  final String pseudo;
+  
+  const HomeContent({super.key, required this.pseudo});
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  String _selectedSkillCategory = 'Général';
 
   @override
   Widget build(BuildContext context) {
-    final state = context.findAncestorStateOfType<_HomePageState>();
-    final pseudo = state?._pseudo ?? 'Utilisateur';
-
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -174,7 +204,7 @@ class HomeContent extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Bienvenue, cher $pseudo !',
+                      'Bienvenue ${widget.pseudo} !',
                       style: Theme.of(context).textTheme.headlineLarge
                           ?.copyWith(
                             fontWeight: FontWeight.bold,
@@ -185,7 +215,7 @@ class HomeContent extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Votre assistant pour réussir vos études à l\'Ecole Polytechnique de Lomé',
+                'Votre assistant pour réussir vos études supérieures au Togo',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
@@ -271,94 +301,24 @@ class HomeContent extends StatelessWidget {
                         ),
                       ).animate().fadeIn(duration: 2000.ms),
                       const SizedBox(height: 16),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.language,
-                        title: 'Test d\'anglais',
-                        description:
-                            'Passez un test EF SET et obtenez un certificat reconnu internationalement.',
-                        url: 'https://www.efset.org/english-certificate/',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.brain,
-                        title: 'Test de QI',
-                        description:
-                            'Évaluez votre intelligence avec le test BMI Certified IQ.',
-                        url: 'https://www.test-iq.org/take-the-iq-test-now/',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.html5,
-                        title: 'Apprendre le développement web',
-                        description: 'Créez votre site web avec HTML5 & CSS3',
-                        url:
-                            'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.js,
-                        title: 'Apprendre a programmer avec JavaScript',
-                        description:
-                            'Maitriser les bases et la logique de la programmation JavaScript',
-                        url:
-                            'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.git,
-                        title: 'Maitriser Git & Github',
-                        description: 'Gérez du code avec Git et Github',
-                        url:
-                            'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3',
-                      ),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.flutter,
-                        title: 'Apprendre le développement mobile avec Flutter',
-                        description:
-                            'Suivez une formation complète sur Flutter pour créer des apps Android/iOS.',
-                        url:
-                            'https://www.youtube.com/playlist?list=PLhi8DXg8yPWbQHwZ9WZtBJ3FGiB72qFkE',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.python,
-                        title: 'Formation Python + Certificat: Anglais',
-                        description: 'Python for beginners',
-                        url:
-                            'https://www.simplilearn.com/learn-python-basics-free-course-skillup?tag=python',
+                      
+                      // Catégories de compétences
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildCategoryChip(context, 'Général'),
+                            const SizedBox(width: 8),
+                            _buildCategoryChip(context, 'Programmation'),
+                            const SizedBox(width: 8),
+                            _buildCategoryChip(context, 'Génie Civil & Mécanique'),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.python,
-                        title: 'Programation Python : Français',
-                        description: 'Apprendre les bases du langage Python',
-                        url:
-                            'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python',
-                      ),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.c,
-                        title: 'Programation C ',
-                        description: 'Apprendre les bases du langage C',
-                        url:
-                            'https://openclassrooms.com/fr/courses/19980-apprenez-a-programmer-en-c',
-                      ),
-                      _buildSkillCard(
-                        context,
-                        icon: FontAwesomeIcons.linux,
-                        title: 'Linux',
-                        description: 'Initiez-vous à Linux',
-                        url:
-                            'https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux',
-                      ),
+                      
+                      // Compétences filtrées par catégorie
+                      ..._getSkillsByCategory(context, _selectedSkillCategory),
                     ],
                   ),
                 ),
@@ -522,6 +482,129 @@ class HomeContent extends StatelessWidget {
         ),
       ),
     ).animate().scale(duration: 300.ms, curve: Curves.easeInOut);
+  }
+
+  // Widget pour construire une puce de catégorie
+  Widget _buildCategoryChip(BuildContext context, String category) {
+    final isSelected = _selectedSkillCategory == category;
+    return FilterChip(
+      label: Text(category),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedSkillCategory = category;
+        });
+      },
+      backgroundColor: Colors.grey[200],
+      selectedColor: Theme.of(context).colorScheme.secondary,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.black : Colors.grey[700],
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+    );
+  }
+
+  // Méthode pour obtenir les compétences par catégorie
+  List<Widget> _getSkillsByCategory(BuildContext context, String category) {
+    final skills = <Widget>[];
+    
+    if (category == 'Général') {
+      skills.addAll([
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.language,
+          title: 'Test d\'anglais',
+          description: 'Passez un test EF SET et obtenez un certificat reconnu internationalement.',
+          url: 'https://www.efset.org/english-certificate/',
+        ),
+        const SizedBox(height: 12),
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.brain,
+          title: 'Test de QI',
+          description: 'Évaluez votre intelligence avec le test BMI Certified IQ.',
+          url: 'https://www.test-iq.org/take-the-iq-test-now/',
+        ),
+      ]);
+    } else if (category == 'Programmation') {
+      skills.addAll([
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.html5,
+          title: 'Apprendre le développement web',
+          description: 'Créez votre site web avec HTML5 & CSS3',
+          url: 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3',
+        ),
+        const SizedBox(height: 12),
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.js,
+          title: 'Apprendre à programmer avec JavaScript',
+          description: 'Maîtriser les bases et la logique de la programmation JavaScript',
+          url: 'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python',
+        ),
+        const SizedBox(height: 12),
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.python,
+          title: 'Programmation Python',
+          description: 'Apprendre les bases du langage Python',
+          url: 'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python',
+        ),
+        const SizedBox(height: 12),
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.c,
+          title: 'Programmation C',
+          description: 'Apprendre les bases du langage C',
+          url: 'https://openclassrooms.com/fr/courses/19980-apprenez-a-programmer-en-c',
+        ),
+        const SizedBox(height: 12),
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.flutter,
+          title: 'Développement mobile avec Flutter',
+          description: 'Suivez une formation complète sur Flutter pour créer des apps Android/iOS.',
+          url: 'https://www.youtube.com/playlist?list=PLhi8DXg8yPWbQHwZ9WZtBJ3FGiB72qFkE',
+        ),
+        const SizedBox(height: 12),
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.git,
+          title: 'Maîtriser Git & Github',
+          description: 'Gérez du code avec Git et Github',
+          url: 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3',
+        ),
+        const SizedBox(height: 12),
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.linux,
+          title: 'Linux',
+          description: 'Initiez-vous à Linux',
+          url: 'https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux',
+        ),
+      ]);
+    } else if (category == 'Génie Civil & Mécanique') {
+      skills.addAll([
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.hammer,
+          title: 'Génie Civil - Introduction',
+          description: 'Découvrez les bases du génie civil et des structures',
+          url: 'https://www.edx.org/learn/civil-engineering',
+        ),
+        const SizedBox(height: 12),
+        _buildSkillCard(
+          context,
+          icon: FontAwesomeIcons.gears,
+          title: 'Mécanique - Fondamentaux',
+          description: 'Apprenez les principes de la mécanique appliquée',
+          url: 'https://www.coursera.org/learn/mechanical-engineering',
+        ),
+      ]);
+    }
+    
+    return skills;
   }
 
   Widget _buildSkillCard(

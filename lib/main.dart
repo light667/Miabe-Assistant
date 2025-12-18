@@ -17,10 +17,28 @@ import 'package:miabeassistant/pages/department_selection_page.dart';
 import 'package:miabeassistant/providers/theme_provider.dart';
 import 'package:miabeassistant/providers/department_provider.dart';
 import 'package:miabeassistant/pages/notifications_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:miabeassistant/constants/app_theme.dart';
+import 'package:miabeassistant/config/app_config.dart';
+import 'package:miabeassistant/config/supabase_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialiser Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+  // Initialiser Supabase
+  await SupabaseConfig.initialize();
+  
+  // Initialiser la configuration (clés API, etc.)
+  try {
+    await AppConfig.initialize();
+    debugPrint('✅ Configuration chargée avec succès');
+  } catch (e) {
+    debugPrint('⚠️ Erreur de chargement de la configuration: $e');
+  }
+  
   runApp(
     MultiProvider(
       providers: [
@@ -42,68 +60,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Miabe Assistant',
-      theme: ThemeData(
-        primaryColor: const Color.fromARGB(255, 4, 68, 244),
-        colorScheme: const ColorScheme.light(
-          primary: Color.fromARGB(255, 4, 68, 244),
-          secondary: Color(0xFFFBBF24),
-          surface: Color(0xFFF3F4F6),
-          onPrimary: Colors.white,
-          onSecondary: Colors.black,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF1E3A8A)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFFBBF24), width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        primaryColor: const Color(0xFF1E3A8A),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF1E3A8A),
-          secondary: Color(0xFFFBBF24),
-          surface: Color(0xFF121212),
-          onPrimary: Colors.white,
-          onSecondary: Colors.black,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF1E3A8A)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFFBBF24), width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[900],
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.darkMode ? ThemeMode.dark : ThemeMode.light,
       home: const SplashScreenPage(),
       routes: {
@@ -122,14 +80,23 @@ class MyApp extends StatelessWidget {
         '/welcome': (context) => const WelcomePage(title: 'Accueil'),
       },
       onGenerateRoute: (settings) {
-        // Handle the special route that decides between onboarding and department selection
+        // Handle the special route that decides between onboarding, login, and department selection
         if (settings.name == '/onboarding_or_department') {
           return MaterialPageRoute(
             builder: (context) {
               final departmentProvider = Provider.of<DepartmentProvider>(context, listen: false);
+              final user = FirebaseAuth.instance.currentUser;
+              
+              // If first launch, show onboarding
               if (departmentProvider.isFirstLaunch) {
                 return const OnboardingPage();
-              } else {
+              } 
+              // If not first launch but user not authenticated, show login
+              else if (user == null) {
+                return const LoginPage(title: 'Connexion');
+              } 
+              // If user is authenticated, show department selection
+              else {
                 return const DepartmentSelectionPage();
               }
             },

@@ -18,7 +18,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordConfirmationController = TextEditingController();
-  final _usernameController = TextEditingController();
+  final _nomController = TextEditingController();
+  final _prenomController = TextEditingController();
+  final _pseudoController = TextEditingController();
   bool _isLoading = false;
   bool _forLogin = true;
 
@@ -40,7 +42,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _emailController.dispose();
     _passwordController.dispose();
     _passwordConfirmationController.dispose();
-    _usernameController.dispose();
+    _nomController.dispose();
+    _prenomController.dispose();
+    _pseudoController.dispose();
     super.dispose();
   }
 
@@ -63,17 +67,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           await Auth().createUserWithEmailAndPassword(
             _emailController.text,
             _passwordController.text,
-            _usernameController.text,
+            _nomController.text,
+            _prenomController.text,
+            _pseudoController.text,
           );
         }
         if (mounted && context.mounted) {
-          Navigator.pushReplacementNamed(context, '/redirection');
+          Navigator.pushReplacementNamed(context, '/department_selection');
         }
       } on FirebaseAuthException catch (e) {
         if (mounted && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.message ?? "Une erreur est survenue"),
+              content: Text(e.message ?? 'Une erreur est survenue'),
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -124,8 +130,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   const SizedBox(height: 8),
                   Text(
                     _forLogin
-                        ? 'Accédez à votre compte PolyAssistant'
-                        : 'Créez un compte pour rejoindre PolyAssistant',
+                        ? 'Accédez à votre compte Miabe Assistant'
+                        : 'Créez un compte pour rejoindre Miabe Assistant',
                     style: textTheme.titleMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w400,
@@ -147,14 +153,86 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             key: _formKey,
                             child: Column(
                               children: [
-                                // Username Field (Signup only)
+                                // Nom Field (Signup only)
                                 if (!_forLogin)
                                   TextFormField(
-                                    controller: _usernameController,
+                                    controller: _nomController,
                                     decoration: InputDecoration(
-                                      labelText: "Pseudo",
+                                      labelText: 'Nom',
                                       prefixIcon: Icon(
                                         Icons.person_outline,
+                                        color: colorScheme.primary,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: colorScheme.primary,
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Le nom est requis';
+                                      }
+                                      return null;
+                                    },
+                                  ).animate().fadeIn(
+                                    delay: 300.ms,
+                                    duration: 600.ms,
+                                  ),
+                                if (!_forLogin) const SizedBox(height: 16),
+
+                                // Prénom Field (Signup only)
+                                if (!_forLogin)
+                                  TextFormField(
+                                    controller: _prenomController,
+                                    decoration: InputDecoration(
+                                      labelText: 'Prénom',
+                                      prefixIcon: Icon(
+                                        Icons.person,
+                                        color: colorScheme.primary,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: colorScheme.primary,
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Le prénom est requis';
+                                      }
+                                      return null;
+                                    },
+                                  ).animate().fadeIn(
+                                    delay: 350.ms,
+                                    duration: 600.ms,
+                                  ),
+                                if (!_forLogin) const SizedBox(height: 16),
+
+                                // Pseudo Field (Signup only)
+                                if (!_forLogin)
+                                  TextFormField(
+                                    controller: _pseudoController,
+                                    decoration: InputDecoration(
+                                      labelText: 'Pseudo',
+                                      prefixIcon: Icon(
+                                        Icons.badge_outlined,
                                         color: colorScheme.primary,
                                       ),
                                       border: OutlineInputBorder(
@@ -180,7 +258,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                       return null;
                                     },
                                   ).animate().fadeIn(
-                                    delay: 300.ms,
+                                    delay: 400.ms,
                                     duration: 600.ms,
                                   ),
                                 if (!_forLogin) const SizedBox(height: 16),

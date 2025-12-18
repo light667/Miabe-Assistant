@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:miabeassistant/widgets/miabe_logo.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key, required this.title});
@@ -33,65 +34,15 @@ class WelcomePage extends StatelessWidget {
                 // Logo principal animé
                 Container(
                   margin: const EdgeInsets.only(bottom: 20, top: 40),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Cercle de fond animé
-                      Container(
-                        width: 180,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          color: colorScheme.secondary.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                      ).animate().scale(
-                        delay: 200.ms,
-                        duration: 1000.ms,
-                        curve: Curves.elasticOut,
-                      ),
-
-                      // Icône du chapeau de diplôme
-                      Container(
-                            width: 140,
-                            height: 140,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  colorScheme.secondary,
-                                  colorScheme.secondary.withValues(alpha: 0.8),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: colorScheme.secondary.withValues(alpha: 0.4),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              FontAwesomeIcons.graduationCap,
-                              size: 70,
-                              color: Colors.white,
-                            ),
-                          )
-                          .animate()
-                          .scale(
-                            delay: 300.ms,
-                            duration: 800.ms,
-                            curve: Curves.elasticOut,
-                          )
-                          .rotate(
-                            begin: -0.05,
-                            end: 0.05,
-                            delay: 1200.ms,
-                            duration: 1000.ms,
-                            curve: Curves.easeInOut,
-                          ),
-                    ],
+                  child: MiabeLogo(
+                    size: 160,
+                    color: colorScheme.secondary,
+                  )
+                  .animate()
+                  .scale(
+                    delay: 200.ms,
+                    duration: 1000.ms,
+                    curve: Curves.elasticOut,
                   ),
                 ),
 

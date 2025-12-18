@@ -17,7 +17,7 @@ class SettingsPage extends StatelessWidget {
     final filiere = prefs.getString('filiere') ?? 'Non défini';
     final semestre = prefs.getString('semestre') ?? 'Non défini';
 
-    final subject = 'Feedback PolyAssistant - $pseudo';
+    final subject = 'Feedback Miabe Assistant - $pseudo';
     final body =
         'Bonjour,\n\nJe suis $pseudo ($filiere, $semestre).\n\nMes idées/suggestions/appreciations :\n\n';
     final uri = Uri(
@@ -64,9 +64,19 @@ class SettingsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        toolbarHeight: 48,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+          onPressed: () => Navigator.pop(context),
+          padding: EdgeInsets.zero,
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 16),
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
+        elevation: 2,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -138,7 +148,7 @@ class SettingsPage extends StatelessWidget {
             onTap: () {
               showAboutDialog(
                 context: context,
-                applicationName: 'PolyAssistant',
+                applicationName: 'Miabe Assistant',
                 applicationVersion: '1.0.0',
                 applicationIcon: const Icon(
                   Icons.school,

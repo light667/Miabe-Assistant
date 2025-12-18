@@ -35,9 +35,9 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF0444F4),
-              const Color(0xFF0444F4).withValues(alpha: 0.8),
-              const Color(0xFF1E3A8A),
+              const Color(0xFF5B8DEF),
+              const Color(0xFF4A7AC9),
+              const Color(0xFF3B6BB8),
             ],
           ),
         ),
@@ -48,19 +48,25 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
               children: [
                 const Spacer(flex: 2),
                 
-                // Logo Container with Animation
+                // Logo Image with Animation
                 Container(
-                  width: 180,
-                  height: 180,
+                  width: 200,
+                  height: 200,
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white,
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 30,
+                        offset: const Offset(0, 15),
+                      ),
+                    ],
                   ),
-                  child: Center(
+                  child: ClipOval(
                     child: Image.asset(
                       'assets/images/miabe_logo.png',
-                      width: 150,
-                      height: 150,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -97,7 +103,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
                   child: Text(
                     'Votre succès académique commence ici',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: Colors.white.withValues(alpha: 0.95),
                           fontSize: 18,
                           fontWeight: FontWeight.w400,
                         ),

@@ -24,6 +24,8 @@ dependencies:
   shimmer: ^2.0.0
   package_info_plus: ^9.0.0
   html: ^0.15.6
+  flutter_markdown: ^0.7.4+1
+  supabase_flutter: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -34,7 +36,10 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon/icon.png"
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#5B8DEF"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
+  min_sdk_android: 21
   
 
 flutter:
@@ -42,6 +47,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icon/
-    - assets/resources/
     - assets/resources_manifest.json
+    - assets/resources_manifest_online.json
+    - assets/resources_manifest_supabase.json
     - assets/resources_manifest_online.json

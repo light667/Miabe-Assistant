@@ -71,7 +71,7 @@ class NotificationService {
 
     await _localNotifications.show(
       0,
-      message.notification?.title ?? 'PolyAssistant',
+      message.notification?.title ?? 'Miabe Assistant',
       message.notification?.body ?? 'Nouvelle notification',
       platformDetails,
     );

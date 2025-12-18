@@ -19,31 +19,31 @@ class _OnboardingPageState extends State<OnboardingPage> {
       icon: Icons.school_rounded,
       title: 'Cours complets',
       description: 'Accédez à tous vos cours et supports pédagogiques',
-      gradient: [Color(0xFF0444F4), Color(0xFF1E3A8A)],
+      gradient: [Color(0xFF5B8DEF), Color(0xFF4A7AC9)],
     ),
     const OnboardingSlide(
       icon: Icons.assignment_rounded,
       title: 'Exercices pratiques',
       description: 'Entraînez-vous avec des exercices corrigés',
-      gradient: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+      gradient: [Color(0xFF4A7AC9), Color(0xFF6B9FF7)],
     ),
     const OnboardingSlide(
       icon: Icons.analytics_rounded,
       title: 'Suivi de progression',
       description: 'Visualisez votre évolution et vos résultats',
-      gradient: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+      gradient: [Color(0xFF6B9FF7), Color(0xFF89B4FA)],
     ),
     const OnboardingSlide(
       icon: Icons.group_rounded,
       title: 'Communauté étudiante',
       description: 'Échangez avec vos camarades de promotion',
-      gradient: [Color(0xFF60A5FA), Color(0xFF93C5FD)],
+      gradient: [Color(0xFF89B4FA), Color(0xFFA8C7FB)],
     ),
     const OnboardingSlide(
       icon: Icons.rocket_launch_rounded,
       title: 'Prêt à décoller ?',
       description: 'Rejoignez des milliers d\'étudiants et boostez votre réussite !',
-      gradient: [Color(0xFF0444F4), Color(0xFFFBBF24)],
+      gradient: [Color(0xFF5B8DEF), Color(0xFFFBBF24)],
       isLast: true,
     ),
   ];
@@ -70,7 +70,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     await departmentProvider.markOnboardingComplete();
     
     if (mounted) {
-      Navigator.pushReplacementNamed(context, '/department_selection');
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
@@ -188,71 +188,123 @@ class _OnboardingPageState extends State<OnboardingPage> {
         ),
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 60),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-
-              // Icon
-              Container(
-                width: 140,
-                height: 140,
+        child: Stack(
+          children: [
+            // Subtle background circles
+            Positioned(
+              top: -80,
+              right: -80,
+              child: Container(
+                width: 250,
+                height: 250,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
                 ),
-                child: Icon(
-                  slide.icon,
-                  size: 80,
-                  color: Colors.white,
+              ),
+            ),
+            Positioned(
+              bottom: -100,
+              left: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.04),
                 ),
-              )
-                  .animate(key: ValueKey(index))
-                  .scale(
-                    duration: 600.ms,
-                    curve: Curves.elasticOut,
-                  )
-                  .fadeIn(duration: 400.ms),
+              ),
+            ),
+            
+            // Main content
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Spacer(),
 
-              const SizedBox(height: 48),
+                  // Icon with elegant design
+                  Center(
+                    child: Container(
+                      width: 180,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 40,
+                            offset: const Offset(0, 15),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          slide.icon,
+                          size: 90,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                        .animate(key: ValueKey(index))
+                        .scale(
+                          duration: 700.ms,
+                          curve: Curves.easeOutBack,
+                        )
+                        .fadeIn(duration: 500.ms),
+                  ),
 
-              // Title
-              Text(
-                slide.title,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 0.5,
-                ),
-                textAlign: TextAlign.center,
-              )
-                  .animate(key: ValueKey('title_$index'))
-                  .fadeIn(delay: 200.ms, duration: 600.ms)
-                  .slideY(begin: 0.3, curve: Curves.easeOutCubic),
+                  const SizedBox(height: 60),
 
-              const SizedBox(height: 24),
+                  // Title
+                  Center(
+                    child: Text(
+                      slide.title,
+                      style: const TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                        height: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                    )
+                        .animate(key: ValueKey('title_$index'))
+                        .fadeIn(delay: 300.ms, duration: 600.ms)
+                        .slideY(begin: 0.2, curve: Curves.easeOut),
+                  ),
 
-              // Description
-              Text(
-                slide.description,
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white.withValues(alpha: 0.9),
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              )
-                  .animate(key: ValueKey('desc_$index'))
-                  .fadeIn(delay: 400.ms, duration: 600.ms)
-                  .slideY(begin: 0.2, curve: Curves.easeOutCubic),
+                  const SizedBox(height: 24),
 
-              const Spacer(),
-              const SizedBox(height: 120), // Space for bottom navigation
-            ],
-          ),
+                  // Description
+                  Center(
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      child: Text(
+                        slide.description,
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Colors.white.withValues(alpha: 0.9),
+                          height: 1.6,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                        .animate(key: ValueKey('desc_$index'))
+                        .fadeIn(delay: 500.ms, duration: 600.ms)
+                        .slideY(begin: 0.1, curve: Curves.easeOut),
+                  ),
+
+                  const Spacer(),
+                  const SizedBox(height: 120), // Space for bottom navigation
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

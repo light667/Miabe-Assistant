@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum Department {
-  engineering,
-  law,
-  health,
-  language,
+  lettresLangueArts,          // Lettres, Langue et Arts
+  sciencesAgronomiques,        // Sciences Agronomiques
+  sciencesEducationFormation,  // Sciences de l'Education et de la Formation
+  sciencesEconomiqueGestion,   // Sciences Economiques et de Gestion
+  sciencesHommeSociete,        // Sciences de l'Homme et de la Société
+  sciencesJuridiquePolitique,  // Sciences Juridiques, Politiques et de l'Administration
+  sciencesSante,               // Sciences de la Santé
+  sciencesTechnologie,         // Sciences et Technologie
 }
 
 class DepartmentProvider extends ChangeNotifier {
@@ -54,40 +58,64 @@ class DepartmentProvider extends ChangeNotifier {
 
   String getDepartmentName(Department dept) {
     switch (dept) {
-      case Department.engineering:
-        return 'Science de l\'Ingénieur';
-      case Department.law:
-        return 'Droit';
-      case Department.health:
-        return 'Santé';
-      case Department.language:
-        return 'Langue';
+      case Department.lettresLangueArts:
+        return 'Lettres, Langue et Arts';
+      case Department.sciencesAgronomiques:
+        return 'Sciences Agronomiques';
+      case Department.sciencesEducationFormation:
+        return 'Sciences de l\'Education et de la Formation';
+      case Department.sciencesEconomiqueGestion:
+        return 'Sciences Economiques et de Gestion';
+      case Department.sciencesHommeSociete:
+        return 'Sciences de l\'Homme et de la Société';
+      case Department.sciencesJuridiquePolitique:
+        return 'Sciences Juridiques, Politiques et de l\'Administration';
+      case Department.sciencesSante:
+        return 'Sciences de la Santé';
+      case Department.sciencesTechnologie:
+        return 'Sciences et Technologie';
     }
   }
 
   IconData getDepartmentIcon(Department dept) {
     switch (dept) {
-      case Department.engineering:
-        return Icons.laptop_mac;
-      case Department.law:
-        return Icons.gavel;
-      case Department.health:
-        return Icons.favorite;
-      case Department.language:
-        return Icons.translate;
+      case Department.lettresLangueArts:
+        return Icons.auto_stories; // Livre/Histoire
+      case Department.sciencesAgronomiques:
+        return Icons.agriculture; // Agriculture
+      case Department.sciencesEducationFormation:
+        return Icons.school; // Education
+      case Department.sciencesEconomiqueGestion:
+        return Icons.business_center; // Affaires/Economie
+      case Department.sciencesHommeSociete:
+        return Icons.people; // Sociologie
+      case Department.sciencesJuridiquePolitique:
+        return Icons.gavel; // Justice/Droit
+      case Department.sciencesSante:
+        return Icons.medical_services; // Santé
+      case Department.sciencesTechnologie:
+        return Icons.computer; // Technologie
     }
   }
 
   Color getDepartmentColor(Department dept) {
     switch (dept) {
-      case Department.engineering:
-        return const Color(0xFF0444F4); // Blue
-      case Department.law:
-        return const Color(0xFF8B0000); // Dark red/burgundy
-      case Department.health:
-        return const Color(0xFFDC143C); // Crimson red
-      case Department.language:
-        return const Color(0xFF10B981); // Green
+      case Department.lettresLangueArts:
+        return const Color(0xFFE91E63); // Rose/Magenta
+      case Department.sciencesAgronomiques:
+        return const Color(0xFF4CAF50); // Vert nature
+      case Department.sciencesEducationFormation:
+        return const Color(0xFF9C27B0); // Violet/Pourpre
+      case Department.sciencesEconomiqueGestion:
+        return const Color(0xFFFF9800); // Orange
+      case Department.sciencesHommeSociete:
+        return const Color(0xFF00BCD4); // Cyan
+      case Department.sciencesJuridiquePolitique:
+        return const Color(0xFF8B0000); // Rouge foncé
+      case Department.sciencesSante:
+        return const Color(0xFFDC143C); // Crimson rouge
+      case Department.sciencesTechnologie:
+        return const Color(0xFF0444F4); // Bleu technologie
     }
   }
 }

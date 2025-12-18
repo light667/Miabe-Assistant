@@ -25,15 +25,25 @@ class Auth {
   Future<void> createUserWithEmailAndPassword(
     String email,
     String password,
-    String username,
+    String nom,
+    String prenom,
+    String pseudo,
   ) async {
     final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    // Mise à jour du profil avec le pseudo
-    await userCredential.user!.updateDisplayName(username);
+    // Mise à jour du profil avec le pseudo comme displayName
+    await userCredential.user!.updateDisplayName(pseudo);
+    
+    // Note: Pour stocker nom et prénom, vous devrez utiliser Firestore
+    // Exemple: await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+    //   'nom': nom,
+    //   'prenom': prenom,
+    //   'pseudo': pseudo,
+    //   'email': email,
+    // });
   }
 
   Future<void> sendPasswordResetEmail(String email) async {

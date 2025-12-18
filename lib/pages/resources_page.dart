@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:url_launcher/url_launcher.dart';
+import '../services/resources_service.dart';
 
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
@@ -15,6 +16,9 @@ class _ResourcesPageState extends State<ResourcesPage> {
   Map<String, dynamic>? selectedFiliere;
   Map<String, dynamic>? selectedSemestre;
   Map<String, dynamic>? selectedMatiere;
+  
+  final ResourcesService _resourcesService = ResourcesService();
+  bool _isLoadingFromSupabase = false;
 
   static const Color primaryBlue = Color(0xFF1976D2);
   static const Color cardBackground = Color(0xFFF5F6F5);
@@ -34,18 +38,43 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
   Future<void> _loadManifest() async {
     if (!mounted) return;
+    
+    setState(() {
+      _isLoadingFromSupabase = true;
+    });
+    
+    try {
+      // Essayer de charger depuis Supabase
+      final manifest = await _resourcesService.getFullManifest();
+      
+      if (mounted && manifest['filieres'].isNotEmpty) {
+        setState(() {
+          filieres = manifest['filieres'];
+          _isLoadingFromSupabase = false;
+        });
+        return;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Erreur Supabase, fallback sur le manifest local: $e');
+    }
+    
+    // Fallback sur le manifest local
     try {
       final String response = await rootBundle.loadString(
-        'assets/resources_manifest_online.json',
+        'assets/resources_manifest_supabase.json',
       );
       final data = json.decode(response);
       if (mounted) {
         setState(() {
           filieres = data["filieres"];
+          _isLoadingFromSupabase = false;
         });
       }
     } catch (e) {
       if (mounted) {
+        setState(() {
+          _isLoadingFromSupabase = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Erreur lors du chargement des ressources')),
         );
@@ -73,10 +102,15 @@ class _ResourcesPageState extends State<ResourcesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 56,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           "Ressources Pédagogiques",
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
