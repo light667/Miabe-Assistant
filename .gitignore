@@ -48,3 +48,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Backend (in separate repo)
+backend/
+functions/
+
+# Large resource files (in Supabase)
+resources/
+assets/resources/
