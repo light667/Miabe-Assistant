@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: polyassistant-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MISTRAL_API_KEY
+        sync: false

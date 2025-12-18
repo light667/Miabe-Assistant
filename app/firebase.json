@@ -1,0 +1,60 @@
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "polyassistant-d250a",
+          "appId": "1:39495723329:android:f351f759dc805d14a159c0",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "polyassistant-d250a",
+          "configurations": {
+            "android": "1:39495723329:android:f351f759dc805d14a159c0",
+            "ios": "1:39495723329:ios:c83634793ca0b397a159c0",
+            "macos": "1:39495723329:ios:c83634793ca0b397a159c0",
+            "web": "1:39495723329:web:39625f8b1e91e708a159c0",
+            "windows": "1:39495723329:web:80fafac12753d416a159c0"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=3600"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
+    ]
+  }
+}
+

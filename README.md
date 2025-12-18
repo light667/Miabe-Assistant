@@ -1,16 +1,50 @@
-# polyassistant
+# Miabe Assistant
 
-A new Flutter project.
+Application mobile et web pour les étudiants avec backend API.
 
-## Getting Started
+## Structure
 
-This project is a starting point for a Flutter application.
+```
+/app        - Application Flutter (Android, iOS, Web)
+/backend    - API Express.js pour le chatbot
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Backend
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Déploiement
+- Hébergé sur Render: https://miabe-assistant.onrender.com
+- Auto-déployé depuis ce repo via Docker
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Développement local
+```bash
+cd backend
+npm install
+node server.js
+```
+
+## Application
+
+### Web
+- Déployé sur Firebase: https://polyassistant-d250a.web.app
+
+### Build
+```bash
+cd app
+flutter pub get
+flutter build web --release
+flutter build apk --release
+```
+
+## Configuration
+
+### Supabase Storage
+- URL: https://gtnyqqstqfwvncnymptm.supabase.co
+- Bucket: resources (404 PDFs pour 6 filières)
+
+### Firebase
+- Hébergement web configuré
+- Analytics et notifications push
+
+### API Chatbot
+- Mistral AI pour les réponses intelligentes
+- Endpoint: https://miabe-assistant.onrender.com/api/chatbot

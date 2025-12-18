@@ -49,9 +49,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Backend (in separate repo)
-backend/
-functions/
+# Backend node_modules
+backend/node_modules/
 
 # Large resource files (in Supabase)
 resources/
