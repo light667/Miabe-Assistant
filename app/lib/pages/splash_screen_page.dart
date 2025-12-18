@@ -36,8 +36,9 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
             end: Alignment.bottomRight,
             colors: [
               const Color(0xFF2196F3), // Bleu
-              const Color(0xFF64B5F6),
+              const Color(0xFF64B5F6), // Bleu clair
               const Color(0xFFFDD835), // Jaune
+              const Color(0xFFFBC02D), // Jaune foncé
             ],
           ),
         ),
@@ -56,7 +57,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 30,
                         offset: const Offset(0, 15),
                       ),
