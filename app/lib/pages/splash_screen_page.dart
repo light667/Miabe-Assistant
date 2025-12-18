@@ -32,12 +32,12 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF5B8DEF),
-              const Color(0xFF4A7AC9),
-              const Color(0xFF3B6BB8),
+              const Color(0xFF2196F3), // Bleu
+              const Color(0xFF64B5F6),
+              const Color(0xFFFDD835), // Jaune
             ],
           ),
         ),
@@ -52,9 +52,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
                 Container(
                   width: 200,
                   height: 200,
-                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -67,7 +65,9 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
                   child: ClipOval(
                     child: Image.asset(
                       'assets/images/miabe_logo.png',
-                      fit: BoxFit.contain,
+                      fit: BoxFit.cover,
+                      width: 200,
+                      height: 200,
                     ),
                   ),
                 )
