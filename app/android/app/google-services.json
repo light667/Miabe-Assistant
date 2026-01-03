@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "446485237252-k4ru7n11jg2l0kfp64cg2dcha379q2vu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.miabe.assistant",
+            "certificate_hash": "28c6d0fa7adc26ff46582d6757787101da9c46d6"
+          }
+        },
+        {
           "client_id": "446485237252-kr9arb1rrq3tmk204bs2dmvq30578vqu.apps.googleusercontent.com",
           "client_type": 3
         }
