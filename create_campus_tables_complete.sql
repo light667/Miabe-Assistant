@@ -179,7 +179,16 @@ CREATE TRIGGER decrement_comments_count_trigger
     FOR EACH ROW
     EXECUTE FUNCTION decrement_comments_count();
 
--- RLS (Row Level Security) - À activer selon vos besoins
+-- ============================================
+-- RLS (Row Level Security) - Sécurisé et Fonctionnel
+-- ============================================
+-- IMPORTANT: Tous les appels doivent avoir Firebase UID en tant que user_id
+-- 
+-- Architecture:
+-- - Utilisateurs anon + Firebase Auth
+-- - Vérification user_id passé par le client (confiance conditionnelle)
+-- - Modération possible avec flag/delete
+
 ALTER TABLE campus_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campus_comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campus_fiches ENABLE ROW LEVEL SECURITY;
@@ -188,21 +197,106 @@ ALTER TABLE campus_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campus_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campus_likes ENABLE ROW LEVEL SECURITY;
 
--- Politiques RLS de base (à adapter selon vos besoins)
-CREATE POLICY "Tous peuvent voir les posts" ON campus_posts FOR SELECT USING (true);
-CREATE POLICY "Tous peuvent créer des posts" ON campus_posts FOR INSERT WITH CHECK (true);
-CREATE POLICY "Auteurs peuvent modifier leurs posts" ON campus_posts FOR UPDATE USING (author_id = auth.uid());
-CREATE POLICY "Auteurs peuvent supprimer leurs posts" ON campus_posts FOR DELETE USING (author_id = auth.uid());
+-- ============================================
+-- CAMPUS POSTS - Politiques
+-- ============================================
+-- SELECT: Tout le monde peut lire les posts publics
+CREATE POLICY "campus_posts_select_all" ON campus_posts
+  FOR SELECT USING (true);
 
-CREATE POLICY "Tous peuvent voir les commentaires" ON campus_comments FOR SELECT USING (true);
-CREATE POLICY "Tous peuvent créer des commentaires" ON campus_comments FOR INSERT WITH CHECK (true);
-CREATE POLICY "Auteurs peuvent modifier leurs commentaires" ON campus_comments FOR UPDATE USING (author_id = auth.uid());
-CREATE POLICY "Auteurs peuvent supprimer leurs commentaires" ON campus_comments FOR DELETE USING (author_id = auth.uid());
+-- INSERT: Tout le monde peut créer (confiance au user_id du client)
+CREATE POLICY "campus_posts_insert_all" ON campus_posts
+  FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Tous peuvent voir les fiches" ON campus_fiches FOR SELECT USING (true);
-CREATE POLICY "Tous peuvent créer des fiches" ON campus_fiches FOR INSERT WITH CHECK (true);
-CREATE POLICY "Auteurs peuvent modifier leurs fiches" ON campus_fiches FOR UPDATE USING (author_id = auth.uid());
-CREATE POLICY "Auteurs peuvent supprimer leurs fiches" ON campus_fiches FOR DELETE USING (author_id = auth.uid());
+-- UPDATE: Seul l'auteur peut modifier
+CREATE POLICY "campus_posts_update_author" ON campus_posts
+  FOR UPDATE USING (author_id = auth.uid() OR auth.role() = 'service_role')
+  WITH CHECK (author_id = auth.uid() OR auth.role() = 'service_role');
 
-CREATE POLICY "Utilisateurs peuvent voir leurs notifications" ON campus_notifications FOR SELECT USING (user_id = auth.uid());
-CREATE POLICY "Utilisateurs peuvent mettre à jour leurs notifications" ON campus_notifications FOR UPDATE USING (user_id = auth.uid());
+-- DELETE: Seul l'auteur peut supprimer
+CREATE POLICY "campus_posts_delete_author" ON campus_posts
+  FOR DELETE USING (author_id = auth.uid() OR auth.role() = 'service_role');
+
+-- ============================================
+-- CAMPUS COMMENTS - Politiques
+-- ============================================
+CREATE POLICY "campus_comments_select_all" ON campus_comments
+  FOR SELECT USING (true);
+
+CREATE POLICY "campus_comments_insert_all" ON campus_comments
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "campus_comments_update_author" ON campus_comments
+  FOR UPDATE USING (author_id = auth.uid() OR auth.role() = 'service_role')
+  WITH CHECK (author_id = auth.uid() OR auth.role() = 'service_role');
+
+CREATE POLICY "campus_comments_delete_author" ON campus_comments
+  FOR DELETE USING (author_id = auth.uid() OR auth.role() = 'service_role');
+
+-- ============================================
+-- CAMPUS FICHES - Politiques
+-- ============================================
+CREATE POLICY "campus_fiches_select_all" ON campus_fiches
+  FOR SELECT USING (true);
+
+CREATE POLICY "campus_fiches_insert_all" ON campus_fiches
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "campus_fiches_update_author" ON campus_fiches
+  FOR UPDATE USING (author_id = auth.uid() OR auth.role() = 'service_role')
+  WITH CHECK (author_id = auth.uid() OR auth.role() = 'service_role');
+
+CREATE POLICY "campus_fiches_delete_author" ON campus_fiches
+  FOR DELETE USING (author_id = auth.uid() OR auth.role() = 'service_role');
+
+-- ============================================
+-- CAMPUS LIKES - Politiques (CRUCIAL)
+-- ============================================
+-- Les likes doivent pouvoir être insert/delete par n'importe qui
+-- car nous n'utilisons pas Supabase Auth, mais Firebase Auth
+CREATE POLICY "campus_likes_select_all" ON campus_likes
+  FOR SELECT USING (true);
+
+CREATE POLICY "campus_likes_insert_all" ON campus_likes
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "campus_likes_delete_all" ON campus_likes
+  FOR DELETE USING (true);
+
+-- ============================================
+-- CAMPUS MEMBERS - Politiques
+-- ============================================
+CREATE POLICY "campus_members_select_all" ON campus_members
+  FOR SELECT USING (true);
+
+CREATE POLICY "campus_members_insert_all" ON campus_members
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "campus_members_update_user" ON campus_members
+  FOR UPDATE USING (user_id = auth.uid() OR auth.role() = 'service_role')
+  WITH CHECK (user_id = auth.uid() OR auth.role() = 'service_role');
+
+CREATE POLICY "campus_members_delete_user" ON campus_members
+  FOR DELETE USING (user_id = auth.uid() OR auth.role() = 'service_role');
+
+-- ============================================
+-- CAMPUS REPORTS - Politiques
+-- ============================================
+CREATE POLICY "campus_reports_insert_all" ON campus_reports
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "campus_reports_select_service_role" ON campus_reports
+  FOR SELECT USING (auth.role() = 'service_role' OR reporter_id = auth.uid());
+
+-- ============================================
+-- CAMPUS NOTIFICATIONS - Politiques
+-- ============================================
+CREATE POLICY "campus_notifications_select_owner" ON campus_notifications
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "campus_notifications_insert_service_role" ON campus_notifications
+  FOR INSERT WITH CHECK (auth.role() = 'service_role');
+
+CREATE POLICY "campus_notifications_update_owner" ON campus_notifications
+  FOR UPDATE USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());

@@ -5,12 +5,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../config/app_config.dart';
 import 'package:miabeassistant/pages/post_detail_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 /// Page Campus Collaboratif - Apprentissage entre pairs
+// Diacritic package removed — using internal sanitization instead.
 class CampusPage extends StatefulWidget {
   const CampusPage({super.key});
 
@@ -27,6 +31,8 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
   bool _isLoading = true;
   List<Map<String, dynamic>> _posts = [];
   List<Map<String, dynamic>> _fiches = [];
+  int _membersCount = 0;
+  RealtimeChannel? _membersSubscription;
   List<Map<String, dynamic>> _filteredPosts = [];
   List<Map<String, dynamic>> _filteredFiches = [];
   final TextEditingController _searchController = TextEditingController();
@@ -48,6 +54,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _membersSubscription?.unsubscribe();
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -85,7 +92,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
     // Charger les posts et fiches depuis Supabase
     try {
       final supabase = Supabase.instance.client;
-      
+
       // Charger les posts de la communauté
       final postsResponse = await supabase
           .from('campus_posts')
@@ -94,7 +101,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
           .eq('semestre', _userSemestre!)
           .order('created_at', ascending: false)
           .limit(50);
-      
+
       // Charger les fiches partagées
       final fichesResponse = await supabase
           .from('campus_fiches')
@@ -103,16 +110,85 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
           .eq('semestre', _userSemestre!)
           .order('created_at', ascending: false)
           .limit(50);
-      
+
       setState(() {
-        _posts = List<Map<String, dynamic>>.from(postsResponse);
-        _fiches = List<Map<String, dynamic>>.from(fichesResponse);
+        _posts = List<Map<String, dynamic>>.from(postsResponse as List<dynamic>);
+        _fiches = List<Map<String, dynamic>>.from(fichesResponse as List<dynamic>);
         _filteredPosts = _posts;
         _filteredFiches = _fiches;
       });
+
+      _updateMembership();
+      _loadMemberCount();
+      _subscribeToMemberChanges();
     } catch (e) {
       debugPrint('Erreur chargement campus: $e');
     }
+  }
+
+  Future<void> _updateMembership() async {
+    if (_userId == null || _userFiliere == null || _userSemestre == null) return;
+    try {
+      final backend = AppConfig.backendUrl;
+      final payload = {
+        'user_id': _userId,
+        'pseudo': _userPseudo,
+        'filiere': _userFiliere,
+        'semestre': _userSemestre,
+        'last_active': DateTime.now().toIso8601String(),
+      };
+
+      if (backend.isNotEmpty) {
+        final resp = await http.post(
+          Uri.parse('$backend/api/members'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        );
+        if (resp.statusCode >= 200 && resp.statusCode < 300) {
+          return;
+        } else {
+          debugPrint('Backend members upsert failed: ${resp.statusCode} ${resp.body}');
+        }
+      }
+
+      // Fallback to client-side Supabase upsert if backend not configured
+      await Supabase.instance.client.from('campus_members').upsert(payload, onConflict: 'user_id');
+    } catch (e) {
+      debugPrint('Error updating membership: $e');
+    }
+  }
+
+  Future<void> _loadMemberCount() async {
+    try {
+      final count = await Supabase.instance.client
+          .from('campus_members')
+          .count(CountOption.exact)
+          .eq('filiere', _userFiliere!)
+          .eq('semestre', _userSemestre!);
+      if (mounted) setState(() => _membersCount = count as int? ?? 0);
+    } catch (e) {
+      debugPrint('Error loading member count: $e');
+    }
+  }
+
+  void _subscribeToMemberChanges() {
+    _membersSubscription?.unsubscribe();
+    _membersSubscription = Supabase.instance.client
+        .channel('public:campus_members')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'campus_members',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'filiere',
+            value: _userFiliere,
+          ),
+          callback: (payload) {
+            _loadMemberCount();
+          },
+        )
+        .subscribe();
   }
 
   void _filterContent(String query) {
@@ -123,12 +199,12 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
       } else {
         _filteredPosts = _posts.where((post) {
           return post['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
-                 post['content'].toString().toLowerCase().contains(query.toLowerCase());
+              post['content'].toString().toLowerCase().contains(query.toLowerCase());
         }).toList();
-        
+
         _filteredFiches = _fiches.where((fiche) {
           return fiche['titre'].toString().toLowerCase().contains(query.toLowerCase()) ||
-                 (fiche['description']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false);
+              (fiche['description']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false);
         }).toList();
       }
     });
@@ -166,6 +242,23 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Règles de la communauté',
+            onPressed: () => _showRulesDialog(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.swap_horiz),
+            onPressed: _showChangeCommunityDialog,
+            tooltip: 'Changer de communauté',
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadCampusData,
+            tooltip: 'Actualiser',
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(130),
           child: Column(
@@ -199,25 +292,13 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                 controller: _tabController,
                 tabs: const [
                   Tab(icon: Icon(Icons.forum), text: 'Discussions'),
-                  Tab(icon: Icon(Icons.description), text: 'Fiches'),
+                  Tab(icon: Icon(Icons.description), text: 'Fichiers'),
                   Tab(icon: Icon(Icons.people), text: 'Communauté'),
                 ],
               ),
             ],
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.swap_horiz),
-            onPressed: _showChangeCommunityDialog,
-            tooltip: 'Changer de communauté',
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadCampusData,
-            tooltip: 'Actualiser',
-          ),
-        ],
       ),
       body: TabBarView(
         controller: _tabController,
@@ -237,6 +318,24 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
 
   String _getCampusInfo() {
     return '$_userFiliere • $_userSemestre';
+  }
+
+  String _sanitizePath(String input) {
+    // Basic sanitization: remove accents and special chars
+    // Since we don't know if 'diacritic' package is available, we do a basic replacement map
+    // or just regex to allow word chars.
+    // Ideally we want "Génie Mécanique" -> "Genie_Mecanique"
+    
+    var output = input.toLowerCase();
+    output = output.replaceAll(RegExp(r'[éèêë]'), 'e');
+    output = output.replaceAll(RegExp(r'[àâ]'), 'a');
+    output = output.replaceAll(RegExp(r'[ùû]'), 'u');
+    output = output.replaceAll(RegExp(r'[îï]'), 'i');
+    output = output.replaceAll(RegExp(r'[ôö]'), 'o');
+    output = output.replaceAll(RegExp(r'[ç]'), 'c');
+    output = output.replaceAll(RegExp(r'[^a-z0-9\._-]'), '_'); // Replace spaces and other chars with _
+    output = output.replaceAll(RegExp(r'_+'), '_'); // Merge multiple underscores
+    return output;
   }
 
   // Dialogue pour changer de communauté
@@ -712,7 +811,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                 _buildStatItem(
                   icon: Icons.people,
                   label: 'Membres',
-                  value: '~',
+                  value: '$_membersCount', // Display real count
                   color: Colors.green,
                 ),
               ],
@@ -768,7 +867,6 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
             const SizedBox(height: 12),
             _buildRuleItem('Respectez vos camarades'),
             _buildRuleItem('Partagez du contenu de qualité'),
-            _buildRuleItem('Pas de plagiat ou de triche'),
             _buildRuleItem('Entraidez-vous mutuellement'),
             const SizedBox(height: 16),
             Container(
@@ -793,6 +891,33 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRulesDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Règles de la communauté'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Respectez vos camarades'),
+              const SizedBox(height: 8),
+              const Text('Partagez du contenu de qualité'),
+              const SizedBox(height: 8),
+              const Text('Entraidez-vous mutuellement'),
+              const SizedBox(height: 12),
+              const Text('🔒 Anonymat préservé : Seul votre pseudo est visible dans la communauté.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fermer')),
+        ],
       ),
     );
   }
@@ -1024,55 +1149,152 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                     return;
                   }
 
-                  final fileName = '${DateTime.now().millisecondsSinceEpoch}_${attachedFile!.name}';
-                  final storagePath = 'campus_attachments/$_userFiliere/$_userSemestre/$fileName';
+                  final extension = attachedFile!.extension ?? 'file';
+                  final sanitizedFileName = _sanitizePath('${DateTime.now().millisecondsSinceEpoch}_${attachedFile!.name}');
+                  final sanitizedFiliere = _sanitizePath(_userFiliere!);
+                  final sanitizedSemestre = _sanitizePath(_userSemestre!);
+                  final storagePath = 'campus_attachments/$sanitizedFiliere/$sanitizedSemestre/$sanitizedFileName';
+                  final backend = AppConfig.backendUrl;
 
-                  if (kIsWeb) {
-                    if (attachedFile!.bytes == null) {
+                  if (backend.isNotEmpty) {
+                    // Proxy upload via backend (accepts base64)
+                    try {
+                      String base64Content;
+                      String contentType = 'application/octet-stream';
+
+                      if (kIsWeb) {
+                        if (attachedFile!.bytes == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
+                          );
+                          return;
+                        }
+                        base64Content = base64Encode(attachedFile!.bytes!);
+                        contentType = attachedFile!.extension ?? contentType;
+                      } else {
+                        final filePathOnDisk = attachedFile!.path;
+                        if (filePathOnDisk == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Chemin de fichier introuvable')),
+                          );
+                          return;
+                        }
+                        final file = File(filePathOnDisk);
+                        final bytes = await file.readAsBytes();
+                        base64Content = base64Encode(bytes);
+                      }
+
+                      final resp = await http.post(
+                        Uri.parse('$backend/api/upload'),
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode({
+                          'bucket': 'campus_files',
+                          'path': storagePath,
+                          'content_base64': base64Content,
+                          'content_type': extension,
+                        }),
+                      );
+
+                      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+                        final j = jsonDecode(resp.body);
+                        attachmentUrl = j['publicUrl'];
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Upload failed: ${resp.statusCode} ${resp.body}')),
+                        );
+                        return;
+                      }
+                    } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
+                        SnackBar(content: Text('Erreur upload: $e')),
                       );
                       return;
                     }
-                    await supabase.storage
-                        .from('campus_files')
-                        .uploadBinary(storagePath, attachedFile!.bytes!);
                   } else {
-                    final filePathOnDisk = attachedFile!.path;
-                    if (filePathOnDisk == null) {
+                    // Require Supabase auth session for uploads. If no supabase user, inform the user.
+                    if (Supabase.instance.client.auth.currentUser == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Chemin de fichier introuvable')),
+                        const SnackBar(content: Text('Veuillez vous connecter (Supabase) avant de partager un fichier')),
                       );
                       return;
                     }
-                    final file = File(filePathOnDisk);
-                    await supabase.storage
-                        .from('campus_files')
-                        .upload(storagePath, file);
-                  }
 
-                  attachmentUrl = supabase.storage
-                      .from('campus_files')
-                      .getPublicUrl(storagePath);
+                    if (kIsWeb) {
+                      if (attachedFile!.bytes == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
+                        );
+                        return;
+                      }
+                      await supabase.storage
+                          .from('campus_files')
+                          .uploadBinary(storagePath, attachedFile!.bytes!);
+                    } else {
+                      final filePathOnDisk = attachedFile!.path;
+                      if (filePathOnDisk == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Chemin de fichier introuvable')),
+                        );
+                        return;
+                      }
+                      final file = File(filePathOnDisk);
+                      await supabase.storage
+                          .from('campus_files')
+                          .upload(storagePath, file);
+                    }
+
+                    attachmentUrl = supabase.storage
+                        .from('campus_files')
+                        .getPublicUrl(storagePath);
+                  }
                   
                   attachmentName = attachedFile!.name;
                   attachmentType = attachedFile!.extension ?? 'unknown';
                 }
 
-                await supabase.from('campus_posts').insert({
-                  'filiere': _userFiliere,
-                  'semestre': _userSemestre,
-                  'author': _userPseudo,
-                  'author_id': _userId,
-                  'type': type,
-                  'title': titleController.text.trim(),
-                  'content': contentController.text.trim(),
-                  'attachment_url': attachmentUrl,
-                  'attachment_name': attachmentName,
-                  'attachment_type': attachmentType,
-                  'likes': 0,
-                  'comments_count': 0,
-                });
+                // Insert post via backend when available to avoid client RLS issues
+                final backend = AppConfig.backendUrl;
+                if (backend.isNotEmpty) {
+                  final resp = await http.post(
+                    Uri.parse('$backend/api/posts'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                      'filiere': _userFiliere,
+                      'semestre': _userSemestre,
+                      'author': _userPseudo,
+                      'author_id': _userId,
+                      'type': type,
+                      'title': titleController.text.trim(),
+                      'content': contentController.text.trim(),
+                      'attachment_url': attachmentUrl,
+                      'attachment_name': attachmentName,
+                      'attachment_type': attachmentType,
+                      'likes': 0,
+                      'comments_count': 0,
+                    }),
+                  );
+                  if (!(resp.statusCode >= 200 && resp.statusCode < 300)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Erreur création post: ${resp.statusCode} ${resp.body}')),
+                    );
+                    return;
+                  }
+                } else {
+                  await supabase.from('campus_posts').insert({
+                    'filiere': _userFiliere,
+                    'semestre': _userSemestre,
+                    'author': _userPseudo,
+                    'author_id': _userId,
+                    'type': type,
+                    'title': titleController.text.trim(),
+                    'content': contentController.text.trim(),
+                    'attachment_url': attachmentUrl,
+                    'attachment_name': attachmentName,
+                    'attachment_type': attachmentType,
+                    'likes': 0,
+                    'comments_count': 0,
+                  });
+                }
 
                 Navigator.pop(context);
                 _loadCampusData();
@@ -1217,51 +1439,143 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                     return;
                   }
 
-                  final fileName = '${DateTime.now().millisecondsSinceEpoch}_${selectedFile!.name}';
-                  final storagePath = 'campus_fiches/$_userFiliere/$_userSemestre/$fileName';
+                  final extension = selectedFile!.extension ?? 'file';
+                  final sanitizedFileName = _sanitizePath('${DateTime.now().millisecondsSinceEpoch}_${selectedFile!.name}');
+                  final sanitizedFiliere = _sanitizePath(_userFiliere!);
+                  final sanitizedSemestre = _sanitizePath(_userSemestre!);
+                  final storagePath = 'campus_fiches/$sanitizedFiliere/$sanitizedSemestre/$sanitizedFileName';
 
-                  if (kIsWeb) {
-                    if (selectedFile!.bytes == null) {
+                  final backend = AppConfig.backendUrl;
+
+                  String fileUrl;
+                  if (backend.isNotEmpty) {
+                    try {
+                      String base64Content;
+                      if (kIsWeb) {
+                        if (selectedFile!.bytes == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
+                          );
+                          return;
+                        }
+                        base64Content = base64Encode(selectedFile!.bytes!);
+                      } else {
+                        final filePathOnDisk = selectedFile!.path;
+                        if (filePathOnDisk == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Chemin de fichier introuvable')),
+                          );
+                          return;
+                        }
+                        final file = File(filePathOnDisk);
+                        final bytes = await file.readAsBytes();
+                        base64Content = base64Encode(bytes);
+                      }
+
+                      final resp = await http.post(
+                        Uri.parse('$backend/api/upload'),
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode({
+                          'bucket': 'campus_files',
+                          'path': storagePath,
+                          'content_base64': base64Content,
+                          'content_type': extension,
+                        }),
+                      );
+
+                      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+                        final j = jsonDecode(resp.body);
+                        fileUrl = j['publicUrl'];
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Upload failed: ${resp.statusCode} ${resp.body}')),
+                        );
+                        return;
+                      }
+                    } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
+                        SnackBar(content: Text('Erreur upload: $e')),
                       );
                       return;
                     }
-                    await Supabase.instance.client.storage
-                        .from('campus_files')
-                        .uploadBinary(storagePath, selectedFile!.bytes!);
                   } else {
-                    final filePathOnDisk = selectedFile!.path;
-                    if (filePathOnDisk == null) {
+                    // Require Supabase auth session for uploads. If no supabase user, inform the user.
+                    if (Supabase.instance.client.auth.currentUser == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Chemin de fichier introuvable')),
+                        const SnackBar(content: Text('Veuillez vous connecter avant de partager une fiche')),
                       );
                       return;
                     }
-                    final file = File(filePathOnDisk);
-                    await Supabase.instance.client.storage
+
+                    if (kIsWeb) {
+                      if (selectedFile!.bytes == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
+                        );
+                        return;
+                      }
+                      await Supabase.instance.client.storage
+                          .from('campus_files')
+                          .uploadBinary(storagePath, selectedFile!.bytes!);
+                    } else {
+                      final filePathOnDisk = selectedFile!.path;
+                      if (filePathOnDisk == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Chemin de fichier introuvable')),
+                        );
+                        return;
+                      }
+                      final file = File(filePathOnDisk);
+                      await Supabase.instance.client.storage
+                          .from('campus_files')
+                          .upload(storagePath, file);
+                    }
+
+                    fileUrl = Supabase.instance.client.storage
                         .from('campus_files')
-                        .upload(storagePath, file);
+                        .getPublicUrl(storagePath);
                   }
 
-                  final fileUrl = Supabase.instance.client.storage
-                      .from('campus_files')
-                      .getPublicUrl(storagePath);
-
-                  // Enregistrer dans la base de données
-                  await Supabase.instance.client.from('campus_fiches').insert({
-                    'filiere': _userFiliere,
-                    'semestre': _userSemestre,
-                    'matiere': matiereController.text.trim(),
-                    'titre': titreController.text.trim(),
-                    'description': descriptionController.text.trim(),
-                    'author': _userPseudo,
-                    'author_id': _userId,
-                    'file_url': fileUrl,
-                    'file_name': selectedFile!.name,
-                    'file_type': selectedFile!.extension ?? 'unknown',
-                    'file_size': selectedFile!.size,
-                  });
+                  // Enregistrer dans la base de données (via backend proxy if available)
+                  if (backend.isNotEmpty) {
+                    final resp = await http.post(
+                      Uri.parse('$backend/api/fiches'),
+                      headers: {'Content-Type': 'application/json'},
+                      body: jsonEncode({
+                        'filiere': _userFiliere,
+                        'semestre': _userSemestre,
+                        'matiere': matiereController.text.trim(),
+                        'titre': titreController.text.trim(),
+                        'description': descriptionController.text.trim(),
+                        'author': _userPseudo,
+                        'author_id': _userId,
+                        'file_url': fileUrl,
+                        'file_name': selectedFile!.name,
+                        'file_type': selectedFile!.extension ?? 'unknown',
+                        'file_size': selectedFile!.size,
+                      }),
+                    );
+                    if (!(resp.statusCode >= 200 && resp.statusCode < 300)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erreur enregistrement fiche: ${resp.statusCode} ${resp.body}')),
+                      );
+                      return;
+                    }
+                  } else {
+                    await Supabase.instance.client.from('campus_fiches').insert({
+                      'filiere': _userFiliere,
+                      'semestre': _userSemestre,
+                      'matiere': matiereController.text.trim(),
+                      'titre': titreController.text.trim(),
+                      'description': descriptionController.text.trim(),
+                      'author': _userPseudo,
+                      'author_id': _userId,
+                      'file_url': fileUrl,
+                      'file_name': selectedFile!.name,
+                      'file_type': selectedFile!.extension ?? 'unknown',
+                      'file_size': selectedFile!.size,
+                    });
+                  }
 
                   Navigator.pop(context);
                   _loadCampusData();

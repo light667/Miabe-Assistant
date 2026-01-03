@@ -7,17 +7,16 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gtnyqqstqfwvncnymptm.supabase.co';
+const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE || process.env.SERVICE_ROLE_KEY || '';
 
 // Middleware de sécurité
 app.use(helmet());
+// Enable CORS: allow requests from development origins and echo origin for browsers.
+// Using a permissive origin: true is safe for local development (it reflects the request origin).
+// For production, replace with a strict origin list.
 app.use(cors({
-  origin: [
-    'https://YOUR_NEW_PROJECT_ID.web.app',
-    'https://YOUR_NEW_PROJECT_ID.firebaseapp.com',
-    'http://localhost:*',
-    /\.web\.app$/,
-    /\.firebaseapp\.com$/
-  ],
+  origin: true,
   credentials: true
 }));
 app.use(express.json());
@@ -135,6 +134,144 @@ app.post('/api/chatbot', async (req, res) => {
     res.status(500).json({ 
       error: 'Erreur lors du traitement de votre message.' 
     });
+  }
+});
+
+// Upsert campus member using Supabase service role (backend-side)
+app.post('/api/members', async (req, res) => {
+  try {
+    const payload = req.body;
+    if (!payload || !payload.user_id) return res.status(400).json({ error: 'user_id is required' });
+
+    if (!SUPABASE_SERVICE_ROLE) return res.status(500).json({ error: 'Supabase service role key not configured' });
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/campus_members?on_conflict=user_id`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_SERVICE_ROLE,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE}`,
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify([payload])
+    });
+
+    const text = await resp.text();
+    if (!resp.ok) return res.status(resp.status).send(text);
+    return res.status(200).send(text);
+  } catch (e) {
+    console.error('Error /api/members', e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Create a post via Supabase service role
+app.post('/api/posts', async (req, res) => {
+  try {
+    const payload = req.body;
+    if (!payload) return res.status(400).json({ error: 'payload required' });
+    if (!SUPABASE_SERVICE_ROLE) return res.status(500).json({ error: 'Supabase service role key not configured' });
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/campus_posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_SERVICE_ROLE,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE}`,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify([payload])
+    });
+
+    const text = await resp.text();
+    if (!resp.ok) return res.status(resp.status).send(text);
+    return res.status(200).send(text);
+  } catch (e) {
+    console.error('Error /api/posts', e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Create a fiche via Supabase service role
+app.post('/api/fiches', async (req, res) => {
+  try {
+    const payload = req.body;
+    if (!payload) return res.status(400).json({ error: 'payload required' });
+    if (!SUPABASE_SERVICE_ROLE) return res.status(500).json({ error: 'Supabase service role key not configured' });
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/campus_fiches`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_SERVICE_ROLE,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE}`,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify([payload])
+    });
+
+    const text = await resp.text();
+    if (!resp.ok) return res.status(resp.status).send(text);
+    return res.status(200).send(text);
+  } catch (e) {
+    console.error('Error /api/fiches', e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Upload file proxy: accepts JSON { bucket, path, content_base64, content_type }
+app.post('/api/upload', async (req, res) => {
+  try {
+    const { bucket, path, content_base64, content_type } = req.body;
+    if (!bucket || !path || !content_base64) return res.status(400).json({ error: 'bucket, path and content_base64 are required' });
+    if (!SUPABASE_SERVICE_ROLE) return res.status(500).json({ error: 'Supabase service role key not configured' });
+
+    const buffer = Buffer.from(content_base64, 'base64');
+    const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`;
+
+    const resp = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': content_type || 'application/octet-stream',
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE}`,
+        'apikey': SUPABASE_SERVICE_ROLE
+      },
+      body: buffer
+    });
+
+    const text = await resp.text();
+    if (!resp.ok) return res.status(resp.status).send(text);
+
+    // Build public URL (if bucket is public) or return path for further processing
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+    return res.json({ publicUrl });
+  } catch (e) {
+    console.error('Error /api/upload', e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Clear all posts (dangerous) - protected by a simple env flag
+app.post('/api/clear_posts', async (req, res) => {
+  try {
+    if (process.env.ALLOW_CLEAR !== '1') return res.status(403).json({ error: 'Clear not allowed' });
+    if (!SUPABASE_SERVICE_ROLE) return res.status(500).json({ error: 'Supabase service role key not configured' });
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/campus_posts`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_SERVICE_ROLE,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const text = await resp.text();
+    if (!resp.ok) return res.status(resp.status).send(text);
+    return res.json({ status: 'cleared', detail: text });
+  } catch (e) {
+    console.error('Error /api/clear_posts', e);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 

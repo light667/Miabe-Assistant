@@ -10,3 +10,7 @@ services:
         value: production
       - key: MISTRAL_API_KEY
         sync: false
+      - key: SUPABASE_SERVICE_ROLE
+        sync: false
+      - key: SUPABASE_URL
+        sync: false

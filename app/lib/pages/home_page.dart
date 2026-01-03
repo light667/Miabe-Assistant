@@ -255,7 +255,7 @@ class _HomeContentState extends State<HomeContent> {
                        _buildCategoryChip('Tout'),
                        _buildCategoryChip('Général'),
                        _buildCategoryChip('Programmation'),
-                       _buildCategoryChip('Génie Civil'),
+                       _buildCategoryChip('Génie Mécanique'),
                        _buildCategoryChip('Langues'),
                      ],
                    ),
@@ -393,10 +393,10 @@ class _HomeContentState extends State<HomeContent> {
         const SizedBox(height: 10),
         _buildSkillCard(context, 'Linux', 'Initiez-vous à Linux', FontAwesomeIcons.linux, 'https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux'),
         const SizedBox(height: 10),
-        // Génie Civil
-        _buildSkillCard(context, 'Génie Civil - Introduction', 'Découvrez les bases du génie civil et des structures', FontAwesomeIcons.hammer, 'https://www.edx.org/learn/civil-engineering'),
+        // Génie Mécanique
+        _buildSkillCard(context, 'Apprendre à utiliser FreeCAD', 'Maîtrisez la modélisation 3D open-source.', FontAwesomeIcons.cube, 'https://gtnyqqstqfwvncnymptm.supabase.co/storage/v1/object/public/resources/competences/FREECAD_Cours.pdf'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, 'Mécanique - Fondamentaux', 'Apprenez les principes de la mécanique appliquée', FontAwesomeIcons.gears, 'https://www.coursera.org/learn/mechanical-engineering'),
+        _buildSkillCard(context, 'Simulations Mécaniques', 'Expérimentez avec des simulations interactives Phet.', FontAwesomeIcons.gears, 'https://phet.colorado.edu/fr/simulations/filter?subjects=physics&type=html,prototype'),
       ];
     } else if (category == 'Général') {
       return [
@@ -420,11 +420,11 @@ class _HomeContentState extends State<HomeContent> {
         const SizedBox(height: 10),
         _buildSkillCard(context, 'Linux', 'Initiez-vous à Linux', FontAwesomeIcons.linux, 'https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux'),
       ];
-    } else if (category == 'Génie Civil') {
+    } else if (category == 'Génie Mécanique') {
       return [
-        _buildSkillCard(context, 'Génie Civil - Introduction', 'Découvrez les bases du génie civil et des structures', FontAwesomeIcons.hammer, 'https://www.edx.org/learn/civil-engineering'),
+        _buildSkillCard(context, 'Apprendre à utiliser FreeCAD', 'Maîtrisez la modélisation 3D open-source.', FontAwesomeIcons.cube, 'https://gtnyqqstqfwvncnymptm.supabase.co/storage/v1/object/public/resources/competences/FREECAD_Cours.pdf'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, 'Mécanique - Fondamentaux', 'Apprenez les principes de la mécanique appliquée', FontAwesomeIcons.gears, 'https://www.coursera.org/learn/mechanical-engineering'),
+        _buildSkillCard(context, 'Simulations Mécaniques', 'Expérimentez avec des simulations interactives Phet.', FontAwesomeIcons.gears, 'https://phet.colorado.edu/fr/simulations/filter?subjects=physics&type=html,prototype'),
       ];
     } else if (category == 'Langues') {
       return [

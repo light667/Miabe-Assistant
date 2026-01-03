@@ -7,6 +7,7 @@ import 'package:miabeassistant/providers/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
+import 'package:miabeassistant/pages/feedback_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.title});
@@ -154,13 +155,9 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _sendFeedback(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final pseudo = prefs.getString('pseudo') ?? 'Anonyme';
-    final uri = Uri(
-      scheme: 'mailto',
-      path: 'nethaniahdjossou@gmail.com',
-      queryParameters: {'subject': 'Feedback Miabé ASSISTANT - $pseudo'},
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FeedbackPage()),
     );
-    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 }

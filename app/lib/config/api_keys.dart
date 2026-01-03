@@ -1,11 +1,15 @@
-/// Configuration des clés API et secrets de l'application
-/// NE JAMAIS COMMITER CE FICHIER AVEC DE VRAIES CLÉS
+/// Configuration des clés API - LES VRAIES CLÉS DOIVENT ÊTRE DANS .env.local
+/// Pour le développement, utilisez:
+/// flutter run --dart-define=MISTRAL_API_KEY=your_key
+/// 
+/// Pour la production, utilisez les secrets du CI/CD ou Firebase Remote Config
 class ApiKeys {
-  // Clé API Mistral AI
-  // Obtenez votre clé sur : https://console.mistral.ai/
-  static const String mistralApiKey = '5kRJdcoJlcq0LdxLEbhfY6kFEpVM6CJd';
+  // Clé API Mistral AI - définie via --dart-define
+  static const String mistralApiKey = String.fromEnvironment(
+    'MISTRAL_API_KEY',
+    defaultValue: '',
+  );
   
-  // Autres clés API peuvent être ajoutées ici
-  // static const String openaiApiKey = 'your_openai_key';
-  // static const String googleApiKey = 'your_google_key';
+  // Valider les clés au démarrage
+  static bool isConfigured() => mistralApiKey.isNotEmpty;
 }

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:miabeassistant/services/mistral_service.dart';
+import 'package:miabeassistant/services/chat_history_service.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
 import 'package:miabeassistant/widgets/miabe_logo.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key, required this.title});
@@ -16,9 +18,12 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ChatHistoryService _historyService = ChatHistoryService();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   bool _showSuggestions = true;
+  String _sessionId = const Uuid().v4();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -88,6 +93,59 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     _scrollToBottom();
+    _saveChat();
+  }
+
+  Future<void> _saveChat() async {
+    if (_messages.isEmpty) return;
+    
+    // Convert messages to JSON-serializable list
+    final messagesJson = _messages.map((m) => {
+      'text': m.text,
+      'isUser': m.isUser,
+      'timestamp': m.timestamp.toIso8601String(),
+    }).toList();
+
+    // Determine title
+    String title = 'Nouvelle discussion';
+    final userMsg = _messages.firstWhere((m) => m.isUser, orElse: () => ChatMessage(text: '', isUser: true, timestamp: DateTime.now()));
+    if (userMsg.text.isNotEmpty) {
+      title = userMsg.text.length > 30 ? '${userMsg.text.substring(0, 30)}...' : userMsg.text;
+    }
+
+    await _historyService.saveSession(_sessionId, messagesJson, title);
+  }
+
+  Future<void> _loadSession(String sessionId) async {
+    final session = await _historyService.getSession(sessionId);
+    if (session == null) return;
+
+    setState(() {
+      _sessionId = sessionId;
+      _messages.clear();
+      final List<dynamic> msgs = session['messages'] ?? [];
+      for (var m in msgs) {
+        _messages.add(ChatMessage(
+          text: m['text'],
+          isUser: m['isUser'],
+          timestamp: DateTime.parse(m['timestamp']),
+        ));
+      }
+      _showSuggestions = _messages.length <= 1; // Only show if empty or just welcome
+    });
+    Navigator.pop(context); // Close drawer
+  }
+
+  Future<void> _deleteSession(String sessionId) async {
+    await _historyService.deleteSession(sessionId);
+    if (_sessionId == sessionId) {
+       // If current was deleted, clear it
+       setState(() {
+         _messages.clear();
+         _addWelcomeMessage();
+         _sessionId = const Uuid().v4();
+       });
+    }
   }
 
   void _scrollToBottom() {
@@ -112,6 +170,8 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      endDrawer: _buildHistoryDrawer(),
       appBar: AppBar(
         title: Row(
           children: [
@@ -126,11 +186,19 @@ class _ChatPageState extends State<ChatPage> {
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.history),
+            tooltip: 'Historique',
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_comment_outlined),
             tooltip: 'Nouvelle conversation',
             onPressed: () {
               setState(() {
                 _messages.clear();
+                _sessionId = const Uuid().v4();
                 _addWelcomeMessage();
                 _showSuggestions = true;
               });
@@ -336,6 +404,108 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryDrawer() {
+    return Drawer(
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor,
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.history, color: Colors.white, size: 30),
+                const SizedBox(width: 16),
+                Text(
+                  'Historique',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<String>>(
+              future: _historyService.getSessionIds(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                final sessionIds = snapshot.data!;
+                if (sessionIds.isEmpty) {
+                  return const Center(child: Text('Aucun historique'));
+                }
+                
+                return ListView.separated(
+                  itemCount: sessionIds.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final id = sessionIds[index];
+                    return FutureBuilder<Map<String, dynamic>?>(
+                      future: _historyService.getSession(id),
+                      builder: (context, itemSnapshot) {
+                         if (!itemSnapshot.hasData) return const SizedBox.shrink();
+                         final session = itemSnapshot.data!;
+                         final title = session['title'] ?? 'Discussion sans titre';
+                         final date = DateTime.tryParse(session['timestamp'] ?? '');
+                         final isSelected = id == _sessionId;
+
+                         return ListTile(
+                           title: Text(
+                             title, 
+                             maxLines: 1, 
+                             overflow: TextOverflow.ellipsis,
+                             style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                           ),
+                           subtitle: date != null ? Text('${date.day}/${date.month} ${date.hour}:${date.minute.toString().padLeft(2, '0')}') : null,
+                           selected: isSelected,
+                           selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                           onTap: () => _loadSession(id),
+                           trailing: IconButton(
+                             icon: const Icon(Icons.delete_outline, size: 20),
+                             onPressed: () async {
+                               await _deleteSession(id);
+                               setState(() {}); // Refresh list
+                             },
+                           ),
+                         );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_forever),
+            title: const Text('Tout effacer'),
+            onTap: () async {
+               // Confirm dialog
+               final confirm = await showDialog<bool>(
+                 context: context,
+                 builder: (c) => AlertDialog(
+                   title: const Text('Tout effacer ?'),
+                   content: const Text('Voulez-vous vraiment supprimer tout l\'historique ?'),
+                   actions: [
+                     TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Non')),
+                     TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Oui', style: TextStyle(color: Colors.red))),
+                   ],
+                 ),
+               );
+               
+               if (confirm == true) {
+                 await _historyService.clearAll();
+                 setState(() {
+                   _messages.clear();
+                   _addWelcomeMessage();
+                   _sessionId = const Uuid().v4();
+                 });
+                 if (mounted && Navigator.canPop(context)) Navigator.pop(context); // Close drawer
+               }
+            },
+          ),
+        ],
       ),
     );
   }

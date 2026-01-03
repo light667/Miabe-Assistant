@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 
 class MistralService {
@@ -13,30 +14,26 @@ class MistralService {
   
   // Prompt système pour guider le chatbot
   static const String _systemPrompt = '''
-Vous êtes Miabé ASSISTANT, un assistant pédagogique intelligent dédié aux étudiants de l'école polytechnique et d'ingénierie.
+Vous êtes Miabe ASSISTANT, un assistant pédagogique et technique dédié aux étudiants en Sciences et Technologie au Togo, et à toutes les personnes passionnées par la technologie.
 
-Votre mission est d'aider les étudiants dans leurs études en sciences et technologies.
+Votre rôle : aider concrètement les étudiants et les apprenants avec des conseils pédagogiques, des exemples pratiques et des guides opératoires.
 
-Vos domaines d'expertise incluent :
-- Rédaction de rapports de stage académiques
-- Préparation et réalisation de stages professionnels
-- Rédaction de lettres de motivation
-- Création de CV professionnels
+Domaines d'expertise :
+- Rédaction de rapports académiques et de stage
+- Aide à la préparation de projets et travaux pratiques
+- Rédaction de CV et lettres de motivation
 - Organisation et planification des études
-- Validation des unités d'enseignement
-- Élaboration de plans de travail
-- Préparation à la vie professionnelle
+- Méthodologie, résolution d'exercices et conseils pratiques
+- Outils et bonnes pratiques en développement logiciel et technologies
 
-Règles de communication :
-1. Soyez précis, structuré et pédagogique
-2. Adaptez vos réponses au contexte togolais et africain
-3. Fournissez des exemples concrets et applicables
-4. Utilisez un français clair et professionnel
-5. Encouragez et motivez les étudiants
-6. Proposez des étapes concrètes et actionnables
+Consignes de ton et de style :
+1. Restez clair, pédagogique et bienveillant.
+2. Adaptez les exemples au contexte togolais lorsque pertinent.
+3. Fournissez des étapes concrètes, listes, et exemples réutilisables.
+4. Privilégiez un français professionnel et accessible.
+5. Si vous donnez des modèles (CV, rapport), fournissez une structure détaillée.
 
-Lorsqu'un étudiant demande un exemple de document (CV, lettre de motivation, rapport), fournissez une structure détaillée avec des sections claires.
-Signature: 'Miabé ASSISTANT 🤖'
+Signature: 'Miabe ASSISTANT 🤖'
 ''';
 
   /// Envoie un message au chatbot Mistral et retourne la réponse
@@ -48,6 +45,36 @@ Signature: 'Miabé ASSISTANT 🤖'
     }
     
     try {
+      // If a backend proxy is configured (default http://localhost:3000), use it first.
+      final backend = AppConfig.backendUrl;
+      if (backend.isNotEmpty) {
+        try {
+          final proxyResp = await http.post(
+            Uri.parse('$backend/api/chatbot'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'message': userMessage,
+              'conversationHistory': conversationHistory ?? [],
+            }),
+          );
+
+          if (proxyResp.statusCode == 200) {
+            final j = jsonDecode(proxyResp.body);
+            if (j['response'] != null) return j['response'].toString().trim();
+          } else {
+            // If proxy returns 4xx/5xx, fall through to direct call below
+            debugPrint('Proxy responded ${proxyResp.statusCode}: ${proxyResp.body}');
+          }
+        } catch (e) {
+          debugPrint('Backend proxy not reachable or failed: $e');
+          // continue to direct Mistral call
+        }
+      }
+      // If no backend responded and client-side key is not configured, return friendly error
+      if (!AppConfig.isConfigured) {
+        return '❌ Chat service unavailable: start the backend proxy or provide Mistral API key via --dart-define.';
+      }
+
       // Construire l'historique de conversation
       final messages = <Map<String, String>>[
         {'role': 'system', 'content': _systemPrompt},

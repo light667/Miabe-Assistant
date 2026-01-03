@@ -23,6 +23,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   bool _isSubmitting = false;
   String? _userPseudo;
   String? _userId;
+  RealtimeChannel? _viewsSubscription;
 
   @override
   void initState() {
@@ -30,6 +31,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     _loadUserData();
     _loadComments();
     _incrementViews();
+    _subscribeToPostChanges();
     
     // Écouter les changements d'état d'authentification Firebase
     firebase_auth.FirebaseAuth.instance.authStateChanges().listen((firebase_auth.User? user) {
@@ -42,6 +44,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   @override
   void dispose() {
+    _viewsSubscription?.unsubscribe();
     _commentController.dispose();
     super.dispose();
   }
@@ -96,14 +99,44 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   Future<void> _incrementViews() async {
+    // Optimistic update locally
+    setState(() {
+       widget.post['views'] = (widget.post['views'] ?? 0) + 1;
+    });
+
     try {
       await Supabase.instance.client
           .from('campus_posts')
-          .update({'views': (widget.post['views'] ?? 0) + 1})
+          .update({'views': widget.post['views']})
           .eq('id', widget.post['id']);
     } catch (e) {
       debugPrint('Erreur incrémentation vues: $e');
     }
+  }
+
+  void _subscribeToPostChanges() {
+    _viewsSubscription = Supabase.instance.client
+        .channel('public:campus_posts:${widget.post['id']}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'campus_posts',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: widget.post['id'],
+          ),
+          callback: (payload) {
+             if (payload.newRecord['views'] != null) {
+               if (mounted) {
+                 setState(() {
+                   widget.post['views'] = payload.newRecord['views'];
+                 });
+               }
+             }
+          },
+        )
+        .subscribe();
   }
 
   Future<void> _loadComments() async {

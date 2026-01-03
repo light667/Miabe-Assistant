@@ -55,3 +55,29 @@ backend/node_modules/
 # Large resource files (in Supabase)
 resources/
 assets/resources/
+# ============================================
+# SENSITIVE FILES - NEVER COMMIT THESE!
+# ============================================
+
+# API Keys and configuration
+app/lib/config/api_keys.dart
+.env.local
+.env.*.local
+
+# Firebase configuration
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Local development secrets
+/backend/.env
+/backend/.env.local
+
+# IDE secrets
+.vscode/settings.json
+.idea/workspace.xml
+.idea/misc.xml
+
+# Build outputs with embedded secrets
+build/
+.dart_tool/
+.flutter-plugins-dependencies
