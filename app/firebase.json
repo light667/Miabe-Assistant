@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"miabe-assistant","appId":"1:446485237252:android:1261c870ef43ac2bc16f51","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"miabe-assistant","configurations":{"android":"1:446485237252:android:1261c870ef43ac2bc16f51","ios":"1:446485237252:ios:a4e81f1e59f2d415c16f51","macos":"1:446485237252:ios:a4e81f1e59f2d415c16f51","web":"1:446485237252:web:5dba8c6efcec6125c16f51","windows":"1:446485237252:web:2926246646e4dfc5c16f51"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "miabe-assistant",
+          "appId": "1:446485237252:android:1261c870ef43ac2bc16f51",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "miabe-assistant",
+          "configurations": {
+            "android": "1:446485237252:android:1261c870ef43ac2bc16f51",
+            "ios": "1:446485237252:ios:a4e81f1e59f2d415c16f51",
+            "macos": "1:446485237252:ios:a4e81f1e59f2d415c16f51",
+            "web": "1:446485237252:web:5dba8c6efcec6125c16f51",
+            "windows": "1:446485237252:web:2926246646e4dfc5c16f51"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

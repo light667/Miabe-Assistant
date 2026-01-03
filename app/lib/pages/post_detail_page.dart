@@ -5,11 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 class PostDetailPage extends StatefulWidget {
   final Map<String, dynamic> post;
 
-  const PostDetailPage({Key? key, required this.post}) : super(key: key);
+  const PostDetailPage({super.key, required this.post});
 
   @override
   State<PostDetailPage> createState() => _PostDetailPageState();
@@ -69,7 +70,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
         debugPrint('Generated UUID v5 from email: $userId');
         
         // Sauvegarder l'email et pseudo si pas déjà fait
-        if (prefs.getString('email') == null && email != null) {
+        if (prefs.getString('email') == null) {
           await prefs.setString('email', email);
           debugPrint('Saved email to prefs: $email');
         }
@@ -379,7 +380,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         ],
                       ),
                       const Divider(height: 24),
-                      ..._comments.map((comment) => _buildCommentCard(comment)).toList(),
+                      ..._comments.map((comment) => _buildCommentCard(comment)),
                     ],
                   ),
           ),
@@ -544,7 +545,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.thumb_up_outlined, size: 20),
+                  icon: const Icon(Icons.thumb_up_outlined, size: 20),
                   onPressed: () => _toggleLike('post', widget.post['id'], widget.post['likes'] ?? 0),
                 ),
                 Text('${widget.post['likes'] ?? 0}'),

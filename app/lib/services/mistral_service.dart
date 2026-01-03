@@ -84,12 +84,12 @@ Signature: 'Miabé ASSISTANT 🤖'
       } else if (response.statusCode == 401) {
         return "❌ Erreur d'authentification API. Veuillez vérifier la clé API Mistral.";
       } else if (response.statusCode == 429) {
-        return "⏳ Trop de requêtes. Veuillez patienter quelques instants avant de réessayer.";
+        return '⏳ Trop de requêtes. Veuillez patienter quelques instants avant de réessayer.';
       } else {
-        return "❌ Erreur ${response.statusCode}: ${response.body}";
+        return '❌ Erreur ${response.statusCode}: ${response.body}';
       }
     } catch (e) {
-      return "❌ Erreur de connexion: ${e.toString()}\n\nVérifiez votre connexion Internet.";
+      return '❌ Erreur de connexion: ${e.toString()}\n\nVérifiez votre connexion Internet.';
     }
   }
 
@@ -682,14 +682,14 @@ Pour activer l'API Mistral réelle, consultez API_CONFIGURATION.md
   /// Génère des suggestions de questions pour démarrer la conversation
   static List<String> getSuggestions() {
     return [
-      "Comment rédiger un bon rapport de stage ?",
-      "Quelles sont les étapes pour trouver un stage ?",
-      "Aide-moi à écrire une lettre de motivation",
-      "Comment créer un CV professionnel ?",
-      "Comment bien organiser mes études ?",
-      "Comment valider toutes mes UE ?",
-      "Aide-moi à faire un plan de travail",
-      "Comment préparer ma vie professionnelle ?",
+      'Comment rédiger un bon rapport de stage ?',
+      'Quelles sont les étapes pour trouver un stage ?',
+      'Aide-moi à écrire une lettre de motivation',
+      'Comment créer un CV professionnel ?',
+      'Comment bien organiser mes études ?',
+      'Comment valider toutes mes UE ?',
+      'Aide-moi à faire un plan de travail',
+      'Comment préparer ma vie professionnelle ?',
     ];
   }
 

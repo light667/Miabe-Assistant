@@ -16,11 +16,22 @@ import 'package:miabeassistant/pages/notifications_page.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
 import 'package:miabeassistant/config/app_config.dart';
 import 'package:miabeassistant/config/supabase_config.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:miabeassistant/firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialiser Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('✅ Firebase initialisé');
+  } catch (e) {
+    debugPrint('⚠️ Impossible d\'initialiser Firebase: $e');
+  }
   
   // Initialiser Supabase
   await SupabaseConfig.initialize();

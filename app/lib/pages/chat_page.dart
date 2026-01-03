@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:miabeassistant/services/mistral_service.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
 import 'package:miabeassistant/widgets/miabe_logo.dart';
@@ -32,8 +29,8 @@ class _ChatPageState extends State<ChatPage> {
   void _addWelcomeMessage() {
     setState(() {
       _messages.add(ChatMessage(
-        text: "👋 Bonjour ! Je suis Miabé ASSISTANT.\n\n"
-            "Je peux vous aider à rédiger des rapports, trouver des stages, ou organiser vos révisions.\n"
+        text: '👋 Bonjour ! Je suis Miabé ASSISTANT.\n\n'
+            'Je peux vous aider à rédiger des rapports, trouver des stages, ou organiser vos révisions.\n'
             "Comment puis-je vous aider aujourd'hui ?",
         isUser: false,
         timestamp: DateTime.now(),
@@ -84,7 +81,7 @@ class _ChatPageState extends State<ChatPage> {
     } catch (e) {
       if (mounted) {
          setState(() {
-          _messages.add(ChatMessage(text: "Désolé, une erreur est survenue.", isUser: false, timestamp: DateTime.now()));
+          _messages.add(ChatMessage(text: 'Désolé, une erreur est survenue.', isUser: false, timestamp: DateTime.now()));
           _isLoading = false;
          });
       }
@@ -130,7 +127,7 @@ class _ChatPageState extends State<ChatPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: "Nouvelle conversation",
+            tooltip: 'Nouvelle conversation',
             onPressed: () {
               setState(() {
                 _messages.clear();
@@ -173,7 +170,7 @@ class _ChatPageState extends State<ChatPage> {
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
         decoration: BoxDecoration(
           gradient: isUser 
-              ? LinearGradient(
+              ? const LinearGradient(
                   colors: [AppTheme.primary, AppTheme.secondary],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -243,7 +240,7 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 boxShadow: AppTheme.softShadow,
              ),
-             child: SizedBox(
+             child: const SizedBox(
                 width: 40, 
                 height: 20, 
                 child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary))
@@ -265,7 +262,7 @@ class _ChatPageState extends State<ChatPage> {
         itemBuilder: (context, index) {
           return ActionChip(
             label: Text(suggestions[index]),
-            labelStyle: TextStyle(
+            labelStyle: const TextStyle(
               color: AppTheme.primary,
               fontWeight: FontWeight.w600,
               fontSize: 13,
@@ -304,7 +301,7 @@ class _ChatPageState extends State<ChatPage> {
                   controller: _messageController,
                   style: Theme.of(context).textTheme.bodyMedium,
                   decoration: InputDecoration(
-                    hintText: "Posez votre question...",
+                    hintText: 'Posez votre question...',
                     hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
                     filled: true,
                     fillColor: Colors.transparent,
@@ -321,7 +318,7 @@ class _ChatPageState extends State<ChatPage> {
             const SizedBox(width: 12),
             Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.secondary]),
+                gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.secondary]),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(

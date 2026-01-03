@@ -17,16 +17,16 @@ class _WelcomePageState extends State<WelcomePage> {
 
   final List<Map<String, String>> _onboardingData = [
     {
-      "title": "Bienvenue sur\nMiabé ASSISTANT",
-      "subtitle": "La plateforme d'excellence pour\nles futurs ingénieurs.",
+      'title': 'Bienvenue sur\nMiabé ASSISTANT',
+      'subtitle': "La plateforme d'excellence pour\nles futurs ingénieurs.",
     },
     {
-      "title": "Ressources\nIllimitées",
-      "subtitle": "Accédez à des milliers de cours,\nTDs et examens corrigés.",
+      'title': 'Ressources\nIllimitées',
+      'subtitle': 'Accédez à des milliers de cours,\nTDs et examens corrigés.',
     },
     {
-      "title": "Communauté\nActive",
-      "subtitle": "Échangez avec les meilleurs\net boostez vos résultats.",
+      'title': 'Communauté\nActive',
+      'subtitle': 'Échangez avec les meilleurs\net boostez vos résultats.',
     },
   ];
 
@@ -88,8 +88,8 @@ class _WelcomePageState extends State<WelcomePage> {
                     onPageChanged: (value) => setState(() => _currentPage = value),
                     itemCount: _onboardingData.length,
                     itemBuilder: (context, index) => _buildPageContent(
-                      title: _onboardingData[index]["title"]!,
-                      subtitle: _onboardingData[index]["subtitle"]!,
+                      title: _onboardingData[index]['title']!,
+                      subtitle: _onboardingData[index]['subtitle']!,
                       index: index,
                     ),
                   ),
@@ -138,7 +138,7 @@ class _WelcomePageState extends State<WelcomePage> {
                             elevation: 8,
                             shadowColor: AppTheme.primary.withValues(alpha: 0.4),
                           ),
-                          child: const Text("Créer un compte"),
+                          child: const Text('Créer un compte'),
                         ),
                       ).animate()
                        .fadeIn(delay: 500.ms)
@@ -157,7 +157,7 @@ class _WelcomePageState extends State<WelcomePage> {
                         child: Text(
                           "J'ai déjà un compte",
                           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: isDark ? Colors.white70 as Color : AppTheme.textSecondaryLight,
+                            color: isDark ? Colors.white70 : AppTheme.textSecondaryLight,
                           ),
                         ),
                       ).animate()

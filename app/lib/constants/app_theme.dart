@@ -136,7 +136,7 @@ class AppTheme {
     useMaterial3: true,
     brightness: Brightness.light,
     scaffoldBackgroundColor: backgroundLight,
-    colorScheme: ColorScheme.light(
+    colorScheme: const ColorScheme.light(
       primary: primary,
       onPrimary: Colors.white,
       primaryContainer: Color(0xFFE0E7FF),
@@ -262,10 +262,10 @@ class AppTheme {
       onSecondary: backgroundDark,
       surface: surfaceDark,
       onSurface: textPrimaryDark,
-      surfaceContainerHighest: Color(0xFF1E293B), // Slate 800
-      error: Color(0xFFF87171),
+      surfaceContainerHighest: const Color(0xFF1E293B), // Slate 800
+      error: const Color(0xFFF87171),
       onError: backgroundDark,
-      outline: Color(0xFF334155),
+      outline: const Color(0xFF334155),
     ),
     
     textTheme: _buildTextTheme(textPrimaryDark, textSecondaryDark),

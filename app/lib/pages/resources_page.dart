@@ -62,7 +62,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
       
       if (mounted) {
         setState(() {
-          filieres = data["filieres"];
+          filieres = data['filieres'];
           _isLoadingFromSupabase = false;
         });
       }
@@ -85,7 +85,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
     if (!await launchUrl(
       pdfUri,
       mode: LaunchMode.externalApplication,
-      webOnlyWindowName: "_blank",
+      webOnlyWindowName: '_blank',
     )) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -100,7 +100,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Ressources Pédagogiques",
+          'Ressources Pédagogiques',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -114,7 +114,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
         ),
       ),
       body: filieres.isEmpty
-          ? Center(child: CircularProgressIndicator(color: AppTheme.primary))
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
           : _buildStepContent(),
     );
   }
@@ -129,7 +129,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
         ));
       },
       child: KeyedSubtree(
-        key: ValueKey(selectedFiliere?.toString() ?? 'root' + (selectedSemestre?.toString() ?? '') + (selectedMatiere?.toString() ?? '')),
+        key: ValueKey(selectedFiliere?.toString() ?? 'root${selectedSemestre?.toString() ?? ''}${selectedMatiere?.toString() ?? ''}'),
         child: _buildCurrentStep(),
       ),
     );
@@ -154,7 +154,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
       itemBuilder: (context, index) {
         final filiere = filieres[index];
         return _buildCard(
-          title: _getFiliereDisplayName(filiere["name"]),
+          title: _getFiliereDisplayName(filiere['name']),
           subtitle: "${filiere["semestres"].length} semestres",
           icon: Icons.school_outlined,
           onTap: () {
@@ -173,15 +173,15 @@ class _ResourcesPageState extends State<ResourcesPage> {
   Widget _buildSemestreSelection() {
     return Column(
       children: [
-        _buildHeader("Choisissez un semestre", () => setState(() => selectedFiliere = null)),
+        _buildHeader('Choisissez un semestre', () => setState(() => selectedFiliere = null)),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16.0),
-            itemCount: selectedFiliere!["semestres"].length,
+            itemCount: selectedFiliere!['semestres'].length,
             itemBuilder: (context, index) {
-              final semestre = selectedFiliere!["semestres"][index];
+              final semestre = selectedFiliere!['semestres'][index];
               return _buildCard(
-                title: semestre["name"],
+                title: semestre['name'],
                 icon: Icons.calendar_today_outlined,
                 onTap: () {
                   setState(() {
@@ -201,15 +201,15 @@ class _ResourcesPageState extends State<ResourcesPage> {
   Widget _buildMatiereSelection() {
     return Column(
       children: [
-        _buildHeader("Choisissez une matière", () => setState(() => selectedSemestre = null)),
+        _buildHeader('Choisissez une matière', () => setState(() => selectedSemestre = null)),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16.0),
-            itemCount: selectedSemestre!["matieres"].length,
+            itemCount: selectedSemestre!['matieres'].length,
             itemBuilder: (context, index) {
-              final matiere = selectedSemestre!["matieres"][index];
+              final matiere = selectedSemestre!['matieres'][index];
               return _buildCard(
-                title: matiere["name"].toUpperCase(),
+                title: matiere['name'].toUpperCase(),
                 icon: Icons.book_outlined,
                 onTap: () {
                   setState(() {
@@ -228,7 +228,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
   Widget _buildPdfSelection() {
     return Column(
       children: [
-        _buildHeader("Ressources disponibles", () => setState(() => selectedMatiere = null)),
+        _buildHeader('Ressources disponibles', () => setState(() => selectedMatiere = null)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
           child: Container(
@@ -252,7 +252,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                 const SizedBox(height: 4),
                 Text(
                   "Matière : ${selectedMatiere!["name"].toUpperCase()}",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.primary),
                 ),
               ],
             ),
@@ -261,14 +261,14 @@ class _ResourcesPageState extends State<ResourcesPage> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16.0),
-            itemCount: selectedMatiere!["pdfs"].length,
+            itemCount: selectedMatiere!['pdfs'].length,
             itemBuilder: (context, index) {
-              final pdf = selectedMatiere!["pdfs"][index];
+              final pdf = selectedMatiere!['pdfs'][index];
               return _buildCard(
-                title: pdf["name"],
+                title: pdf['name'],
                 icon: Icons.picture_as_pdf_outlined,
                 isPdf: true,
-                onTap: () => _openPdf(pdf["url"]),
+                onTap: () => _openPdf(pdf['url']),
                 delay: index * 50,
               );
             },

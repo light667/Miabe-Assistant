@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:miabeassistant/services/firebase/auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
 import 'package:miabeassistant/widgets/miabe_logo.dart';
@@ -221,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                                         Expanded(
                                           child: _buildTextField(
                                             controller: _nomController,
-                                            label: "Nom",
+                                            label: 'Nom',
                                             icon: Icons.person_outline,
                                           ),
                                         ),
@@ -229,7 +230,7 @@ class _LoginPageState extends State<LoginPage> {
                                         Expanded(
                                           child: _buildTextField(
                                             controller: _prenomController,
-                                            label: "Prénom",
+                                            label: 'Prénom',
                                             icon: Icons.person_outline,
                                           ),
                                         ),
@@ -238,7 +239,7 @@ class _LoginPageState extends State<LoginPage> {
                                     const SizedBox(height: 20),
                                     _buildTextField(
                                       controller: _pseudoController,
-                                      label: "Pseudo",
+                                      label: 'Pseudo',
                                       icon: Icons.alternate_email,
                                     ),
                                     const SizedBox(height: 20),
@@ -246,7 +247,7 @@ class _LoginPageState extends State<LoginPage> {
 
                                   _buildTextField(
                                     controller: _emailController,
-                                    label: "Email",
+                                    label: 'Email',
                                     icon: Icons.school_outlined,
                                     keyboardType: TextInputType.emailAddress,
                                   ),
@@ -254,7 +255,7 @@ class _LoginPageState extends State<LoginPage> {
                                   
                                   _buildTextField(
                                     controller: _passwordController,
-                                    label: "Mot de passe",
+                                    label: 'Mot de passe',
                                     icon: Icons.lock_outline,
                                     isPassword: true,
                                     showPassword: _obscurePassword,
@@ -265,7 +266,7 @@ class _LoginPageState extends State<LoginPage> {
                                     const SizedBox(height: 20),
                                     _buildTextField(
                                       controller: _passwordConfirmationController,
-                                      label: "Confirmer",
+                                      label: 'Confirmer',
                                       icon: Icons.lock_reset,
                                       isPassword: true,
                                       showPassword: _obscurePassword,
@@ -284,7 +285,7 @@ class _LoginPageState extends State<LoginPage> {
                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                           textStyle: const TextStyle(fontWeight: FontWeight.w600),
                                         ),
-                                        child: const Text("Mot de passe oublié ?"),
+                                        child: const Text('Mot de passe oublié ?'),
                                       ),
                                     ),
                                   ],
@@ -299,7 +300,7 @@ class _LoginPageState extends State<LoginPage> {
                                             width: 24, 
                                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)
                                           )
-                                        : Text(_forLogin ? "Se Connecter" : "Commencer"),
+                                        : Text(_forLogin ? 'Se Connecter' : 'Commencer'),
                                   ),
                                 ],
                               ),
@@ -315,14 +316,14 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _forLogin ? "Nouveau ici ? " : "Déjà membre ? ",
+                            _forLogin ? 'Nouveau ici ? ' : 'Déjà membre ? ',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           GestureDetector(
                             onTap: _toggleForm,
                             child: Text(
-                              _forLogin ? "Créer un compte" : "Se connecter",
-                              style: TextStyle(
+                              _forLogin ? 'Créer un compte' : 'Se connecter',
+                              style: const TextStyle(
                                 color: AppTheme.primary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -340,7 +341,7 @@ class _LoginPageState extends State<LoginPage> {
                           const Expanded(child: Divider()),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text("Social", style: Theme.of(context).textTheme.bodySmall),
+                            child: Text('Social', style: Theme.of(context).textTheme.bodySmall),
                           ),
                           const Expanded(child: Divider()),
                         ],
@@ -354,7 +355,7 @@ class _LoginPageState extends State<LoginPage> {
                            Expanded(
                             child: _buildSocialButtonWithImage(
                               imagePath: 'assets/images/github.png',
-                              label: "GitHub",
+                              label: 'GitHub',
                               onTap: () async {
                                  // reuse logic...
                                  setState(() => _isLoading = true);
@@ -362,7 +363,7 @@ class _LoginPageState extends State<LoginPage> {
                                     final user = await Auth().signInWithGitHub();
                                     if (user != null && mounted) Navigator.pushReplacementNamed(context, '/redirection');
                                   } catch (e) {
-                                    if (mounted) _showErrorSnackBar("Erreur GitHub: $e");
+                                    if (mounted) _showErrorSnackBar('Erreur GitHub: $e');
                                   } finally {
                                     if (mounted) setState(() => _isLoading = false);
                                   }
@@ -373,14 +374,14 @@ class _LoginPageState extends State<LoginPage> {
                            Expanded(
                              child: _buildSocialButtonWithImage(
                               imagePath: 'assets/images/google.png',
-                              label: "Google",
+                              label: 'Google',
                               onTap: () async {
                                   setState(() => _isLoading = true);
                                   try {
                                     final user = await Auth().signInWithGoogle();
                                     if (user != null && mounted) Navigator.pushReplacementNamed(context, '/redirection');
                                   } catch (e) {
-                                    if (mounted) _showErrorSnackBar("Erreur Google: $e");
+                                    if (mounted) _showErrorSnackBar('Erreur Google: $e');
                                   } finally {
                                     if (mounted) setState(() => _isLoading = false);
                                   }
@@ -391,7 +392,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       
                       const SizedBox(height: 40),
-                      Text("v$_appVersion", style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                      Text('v$_appVersion', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
                     ],
                   ),
                 ),
@@ -468,27 +469,27 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Réinitialisation"),
+        title: const Text('Réinitialisation'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Entrez votre email pour recevoir le lien."),
+            const Text('Entrez votre email pour recevoir le lien.'),
             const SizedBox(height: 16),
             TextField(
               controller: resetController,
-              decoration: const InputDecoration(labelText: "Email", prefixIcon: Icon(Icons.email)),
+              decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           FilledButton(
             onPressed: () {
               Auth().sendPasswordResetEmail(resetController.text);
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Email envoyé")));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email envoyé')));
             },
-            child: const Text("Envoyer"),
+            child: const Text('Envoyer'),
           ),
         ],
       ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
-import 'package:miabeassistant/widgets/miabe_logo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:miabeassistant/pages/chat_page.dart';
@@ -187,7 +187,7 @@ class _HomeContentState extends State<HomeContent> {
                              mainAxisSize: MainAxisSize.min,
                              children: [
                                Text(
-                                "Bonjour, ${widget.pseudo}",
+                                'Bonjour, ${widget.pseudo}',
                                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -227,13 +227,13 @@ class _HomeContentState extends State<HomeContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                  // Quick Actions
-                 Text("Accès Rapide", style: Theme.of(context).textTheme.titleLarge),
+                 Text('Accès Rapide', style: Theme.of(context).textTheme.titleLarge),
                  const SizedBox(height: 16),
                  Row(
                    children: [
-                     Expanded(child: _buildQuickActionCard(context, "Mes Cours", FontAwesomeIcons.bookOpen, AppTheme.primary, () => Navigator.pushNamed(context, '/resources'))),
+                     Expanded(child: _buildQuickActionCard(context, 'Mes Cours', FontAwesomeIcons.bookOpen, AppTheme.primary, () => Navigator.pushNamed(context, '/resources'))),
                      const SizedBox(width: 16),
-                     Expanded(child: _buildQuickActionCard(context, "Mon Assistant", FontAwesomeIcons.robot, AppTheme.secondary, () => Navigator.pushNamed(context, '/chat'))),
+                     Expanded(child: _buildQuickActionCard(context, 'Mon Assistant', FontAwesomeIcons.robot, AppTheme.secondary, () => Navigator.pushNamed(context, '/chat'))),
                    ],
                  ).animate().fadeIn().slideY(begin: 0.1, end: 0),
                  
@@ -243,7 +243,7 @@ class _HomeContentState extends State<HomeContent> {
                  Row(
                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                    children: [
-                     Text("Compétences", style: Theme.of(context).textTheme.titleLarge),
+                     Text('Compétences', style: Theme.of(context).textTheme.titleLarge),
                      IconButton(icon: const Icon(Icons.tune, size: 20), onPressed: () {}),
                    ],
                  ),
@@ -270,25 +270,25 @@ class _HomeContentState extends State<HomeContent> {
                  Text("Plateformes d'apprentissage en ligne", style: Theme.of(context).textTheme.titleLarge),
                  const SizedBox(height: 8),
                  Text(
-                   "Découvrez les meilleures plateformes pour renforcer vos compétences techniques.",
+                   'Découvrez les meilleures plateformes pour renforcer vos compétences techniques.',
                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).hintColor),
                  ),
                  const SizedBox(height: 16),
-                 _buildLearningPlatformCard(context, title: "DataCamp", description: "Apprenez la science des données et l'analyse avec Python, R et SQL.", icon: FontAwesomeIcons.chartLine, url: "https://www.datacamp.com/"),
+                 _buildLearningPlatformCard(context, title: 'DataCamp', description: "Apprenez la science des données et l'analyse avec Python, R et SQL.", icon: FontAwesomeIcons.chartLine, url: 'https://www.datacamp.com/'),
                  const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: "Moodle", description: "Plateforme d'apprentissage open source utilisée par les universités.", icon: FontAwesomeIcons.graduationCap, url: "https://moodle.org/?lang=fr"),
+                 _buildLearningPlatformCard(context, title: 'Moodle', description: "Plateforme d'apprentissage open source utilisée par les universités.", icon: FontAwesomeIcons.graduationCap, url: 'https://moodle.org/?lang=fr'),
                  const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: "SoloLearn", description: "Apprenez à coder sur mobile avec des cours interactifs.", icon: FontAwesomeIcons.mobile, url: "https://www.sololearn.com/en/"),
+                 _buildLearningPlatformCard(context, title: 'SoloLearn', description: 'Apprenez à coder sur mobile avec des cours interactifs.', icon: FontAwesomeIcons.mobile, url: 'https://www.sololearn.com/en/'),
                  const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: "Coursera", description: "Cours en ligne des meilleures universités mondiales.", icon: FontAwesomeIcons.buildingColumns, url: "https://www.coursera.org/"),
+                 _buildLearningPlatformCard(context, title: 'Coursera', description: 'Cours en ligne des meilleures universités mondiales.', icon: FontAwesomeIcons.buildingColumns, url: 'https://www.coursera.org/'),
                  const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: "freeCodeCamp", description: "Apprenez le développement web gratuitement avec des projets pratiques.", icon: FontAwesomeIcons.code, url: "https://www.freecodecamp.org/"),
+                 _buildLearningPlatformCard(context, title: 'freeCodeCamp', description: 'Apprenez le développement web gratuitement avec des projets pratiques.', icon: FontAwesomeIcons.code, url: 'https://www.freecodecamp.org/'),
                  const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: "HackerRank", description: "Améliorez vos compétences en programmation grâce à des défis codés.", icon: FontAwesomeIcons.laptopCode, url: "https://www.hackerrank.com/"),
+                 _buildLearningPlatformCard(context, title: 'HackerRank', description: 'Améliorez vos compétences en programmation grâce à des défis codés.', icon: FontAwesomeIcons.laptopCode, url: 'https://www.hackerrank.com/'),
                  const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: "OpenClassrooms", description: "Formations en ligne avec mentorat pour obtenir des diplômes reconnus.", icon: FontAwesomeIcons.desktop, url: "https://openclassrooms.com/fr/"),
+                 _buildLearningPlatformCard(context, title: 'OpenClassrooms', description: 'Formations en ligne avec mentorat pour obtenir des diplômes reconnus.', icon: FontAwesomeIcons.desktop, url: 'https://openclassrooms.com/fr/'),
                  const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: "Simplilearn", description: "Formations certifiantes en digital skills et technologies émergentes.", icon: FontAwesomeIcons.rocket, url: "https://www.simplilearn.com/"),
+                 _buildLearningPlatformCard(context, title: 'Simplilearn', description: 'Formations certifiantes en digital skills et technologies émergentes.', icon: FontAwesomeIcons.rocket, url: 'https://www.simplilearn.com/'),
                  
                  const SizedBox(height: 24),
                  
@@ -378,65 +378,65 @@ class _HomeContentState extends State<HomeContent> {
       // Afficher toutes les compétences
       return [
         // Général
-        _buildSkillCard(context, "Test d'anglais", "Passez un test EF SET et obtenez un certificat reconnu internationalement.", FontAwesomeIcons.language, "https://www.efset.org/english-certificate/"),
+        _buildSkillCard(context, "Test d'anglais", 'Passez un test EF SET et obtenez un certificat reconnu internationalement.', FontAwesomeIcons.language, 'https://www.efset.org/english-certificate/'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Test de QI", "Évaluez votre intelligence avec le test BMI Certified IQ.", FontAwesomeIcons.brain, "https://www.test-iq.org/take-the-iq-test-now/"),
+        _buildSkillCard(context, 'Test de QI', 'Évaluez votre intelligence avec le test BMI Certified IQ.', FontAwesomeIcons.brain, 'https://www.test-iq.org/take-the-iq-test-now/'),
         const SizedBox(height: 10),
         // Programmation
-        _buildSkillCard(context, "Apprendre le développement web", "Créez votre site web avec HTML5 & CSS3", FontAwesomeIcons.html5, "https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3"),
+        _buildSkillCard(context, 'Apprendre le développement web', 'Créez votre site web avec HTML5 & CSS3', FontAwesomeIcons.html5, 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Programmation Python", "Apprendre les bases du langage Python", FontAwesomeIcons.python, "https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python"),
+        _buildSkillCard(context, 'Programmation Python', 'Apprendre les bases du langage Python', FontAwesomeIcons.python, 'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Développement mobile avec Flutter", "Suivez une formation complète sur Flutter pour créer des apps Android/iOS.", FontAwesomeIcons.flutter, "https://www.youtube.com/playlist?list=PLhi8DXg8yPWbQHwZ9WZtBJ3FGiB72qFkE"),
+        _buildSkillCard(context, 'Développement mobile avec Flutter', 'Suivez une formation complète sur Flutter pour créer des apps Android/iOS.', FontAwesomeIcons.flutter, 'https://www.youtube.com/playlist?list=PLhi8DXg8yPWbQHwZ9WZtBJ3FGiB72qFkE'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Maîtriser Git & Github", "Gérez du code avec Git et Github", FontAwesomeIcons.git, "https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3"),
+        _buildSkillCard(context, 'Maîtriser Git & Github', 'Gérez du code avec Git et Github', FontAwesomeIcons.git, 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Linux", "Initiez-vous à Linux", FontAwesomeIcons.linux, "https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux"),
+        _buildSkillCard(context, 'Linux', 'Initiez-vous à Linux', FontAwesomeIcons.linux, 'https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux'),
         const SizedBox(height: 10),
         // Génie Civil
-        _buildSkillCard(context, "Génie Civil - Introduction", "Découvrez les bases du génie civil et des structures", FontAwesomeIcons.hammer, "https://www.edx.org/learn/civil-engineering"),
+        _buildSkillCard(context, 'Génie Civil - Introduction', 'Découvrez les bases du génie civil et des structures', FontAwesomeIcons.hammer, 'https://www.edx.org/learn/civil-engineering'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Mécanique - Fondamentaux", "Apprenez les principes de la mécanique appliquée", FontAwesomeIcons.gears, "https://www.coursera.org/learn/mechanical-engineering"),
+        _buildSkillCard(context, 'Mécanique - Fondamentaux', 'Apprenez les principes de la mécanique appliquée', FontAwesomeIcons.gears, 'https://www.coursera.org/learn/mechanical-engineering'),
       ];
     } else if (category == 'Général') {
       return [
-        _buildSkillCard(context, "Test d'anglais", "Passez un test EF SET et obtenez un certificat reconnu internationalement.", FontAwesomeIcons.language, "https://www.efset.org/english-certificate/"),
+        _buildSkillCard(context, "Test d'anglais", 'Passez un test EF SET et obtenez un certificat reconnu internationalement.', FontAwesomeIcons.language, 'https://www.efset.org/english-certificate/'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Test de QI", "Évaluez votre intelligence avec le test BMI Certified IQ.", FontAwesomeIcons.brain, "https://www.test-iq.org/take-the-iq-test-now/"),
+        _buildSkillCard(context, 'Test de QI', 'Évaluez votre intelligence avec le test BMI Certified IQ.', FontAwesomeIcons.brain, 'https://www.test-iq.org/take-the-iq-test-now/'),
       ];
     } else if (category == 'Programmation') {
       return [
-        _buildSkillCard(context, "Apprendre le développement web", "Créez votre site web avec HTML5 & CSS3", FontAwesomeIcons.html5, "https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3"),
+        _buildSkillCard(context, 'Apprendre le développement web', 'Créez votre site web avec HTML5 & CSS3', FontAwesomeIcons.html5, 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Apprendre à programmer avec JavaScript", "Maîtriser les bases et la logique de la programmation JavaScript", FontAwesomeIcons.js, "https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python"),
+        _buildSkillCard(context, 'Apprendre à programmer avec JavaScript', 'Maîtriser les bases et la logique de la programmation JavaScript', FontAwesomeIcons.js, 'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Programmation Python", "Apprendre les bases du langage Python", FontAwesomeIcons.python, "https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python"),
+        _buildSkillCard(context, 'Programmation Python', 'Apprendre les bases du langage Python', FontAwesomeIcons.python, 'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Programmation C", "Apprendre les bases du langage C", FontAwesomeIcons.c, "https://openclassrooms.com/fr/courses/19980-apprenez-a-programmer-en-c"),
+        _buildSkillCard(context, 'Programmation C', 'Apprendre les bases du langage C', FontAwesomeIcons.c, 'https://openclassrooms.com/fr/courses/19980-apprenez-a-programmer-en-c'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Développement mobile avec Flutter", "Suivez une formation complète sur Flutter pour créer des apps Android/iOS.", FontAwesomeIcons.flutter, "https://www.youtube.com/playlist?list=PLhi8DXg8yPWbQHwZ9WZtBJ3FGiB72qFkE"),
+        _buildSkillCard(context, 'Développement mobile avec Flutter', 'Suivez une formation complète sur Flutter pour créer des apps Android/iOS.', FontAwesomeIcons.flutter, 'https://www.youtube.com/playlist?list=PLhi8DXg8yPWbQHwZ9WZtBJ3FGiB72qFkE'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Maîtriser Git & Github", "Gérez du code avec Git et Github", FontAwesomeIcons.git, "https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3"),
+        _buildSkillCard(context, 'Maîtriser Git & Github', 'Gérez du code avec Git et Github', FontAwesomeIcons.git, 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Linux", "Initiez-vous à Linux", FontAwesomeIcons.linux, "https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux"),
+        _buildSkillCard(context, 'Linux', 'Initiez-vous à Linux', FontAwesomeIcons.linux, 'https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux'),
       ];
     } else if (category == 'Génie Civil') {
       return [
-        _buildSkillCard(context, "Génie Civil - Introduction", "Découvrez les bases du génie civil et des structures", FontAwesomeIcons.hammer, "https://www.edx.org/learn/civil-engineering"),
+        _buildSkillCard(context, 'Génie Civil - Introduction', 'Découvrez les bases du génie civil et des structures', FontAwesomeIcons.hammer, 'https://www.edx.org/learn/civil-engineering'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Mécanique - Fondamentaux", "Apprenez les principes de la mécanique appliquée", FontAwesomeIcons.gears, "https://www.coursera.org/learn/mechanical-engineering"),
+        _buildSkillCard(context, 'Mécanique - Fondamentaux', 'Apprenez les principes de la mécanique appliquée', FontAwesomeIcons.gears, 'https://www.coursera.org/learn/mechanical-engineering'),
       ];
     } else if (category == 'Langues') {
       return [
-        _buildSkillCard(context, "Anglais Technique", "TOEIC/TOEFL", FontAwesomeIcons.language, "https://ets.org"),
+        _buildSkillCard(context, 'Anglais Technique', 'TOEIC/TOEFL', FontAwesomeIcons.language, 'https://ets.org'),
         const SizedBox(height: 10),
-        _buildSkillCard(context, "Test d'anglais EF SET", "Certificat reconnu internationalement", FontAwesomeIcons.language, "https://www.efset.org/english-certificate/"),
+        _buildSkillCard(context, "Test d'anglais EF SET", 'Certificat reconnu internationalement', FontAwesomeIcons.language, 'https://www.efset.org/english-certificate/'),
       ];
     }
     return [
-       _buildSkillCard(context, "Gestion de Projet", "Agile & Scrum", FontAwesomeIcons.listCheck, "https://scrum.org"),
+       _buildSkillCard(context, 'Gestion de Projet', 'Agile & Scrum', FontAwesomeIcons.listCheck, 'https://scrum.org'),
        const SizedBox(height: 10),
-       _buildSkillCard(context, "Test d'anglais", "TOEIC/TOEFL", FontAwesomeIcons.language, "https://ets.org"),
+       _buildSkillCard(context, "Test d'anglais", 'TOEIC/TOEFL', FontAwesomeIcons.language, 'https://ets.org'),
     ];
   }
 

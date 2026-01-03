@@ -8,10 +8,11 @@ import 'dart:io';
 import 'package:miabeassistant/pages/post_detail_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 /// Page Campus Collaboratif - Apprentissage entre pairs
 class CampusPage extends StatefulWidget {
-  const CampusPage({Key? key}) : super(key: key);
+  const CampusPage({super.key});
 
   @override
   State<CampusPage> createState() => _CampusPageState();
@@ -276,7 +277,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedFiliere,
+                initialValue: selectedFiliere,
                 decoration: const InputDecoration(
                   labelText: 'Filière',
                   border: OutlineInputBorder(),
@@ -299,7 +300,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedSemestre,
+                initialValue: selectedSemestre,
                 decoration: const InputDecoration(
                   labelText: 'Semestre',
                   border: OutlineInputBorder(),
@@ -1024,7 +1025,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                   }
 
                   final fileName = '${DateTime.now().millisecondsSinceEpoch}_${attachedFile!.name}';
-                  final storagePath = 'campus_attachments/${_userFiliere}/${_userSemestre}/$fileName';
+                  final storagePath = 'campus_attachments/$_userFiliere/$_userSemestre/$fileName';
 
                   if (kIsWeb) {
                     if (attachedFile!.bytes == null) {
@@ -1217,7 +1218,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                   }
 
                   final fileName = '${DateTime.now().millisecondsSinceEpoch}_${selectedFile!.name}';
-                  final storagePath = 'campus_fiches/${_userFiliere}/${_userSemestre}/$fileName';
+                  final storagePath = 'campus_fiches/$_userFiliere/$_userSemestre/$fileName';
 
                   if (kIsWeb) {
                     if (selectedFile!.bytes == null) {

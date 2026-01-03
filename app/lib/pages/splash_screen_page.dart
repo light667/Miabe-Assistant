@@ -96,7 +96,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
               const Spacer(flex: 2),
 
               // Loader
-               SizedBox(
+               const SizedBox(
                 width: 40,
                 height: 40,
                 child: CircularProgressIndicator(
