@@ -41,48 +41,52 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCHxblJprbNN2TBPWiFDdbQhySyfAS52es',
-    appId: '1:39495723329:web:39625f8b1e91e708a159c0',
-    messagingSenderId: '39495723329',
-    projectId: 'polyassistant-d250a',
-    authDomain: 'polyassistant-d250a.firebaseapp.com',
-    storageBucket: 'polyassistant-d250a.firebasestorage.app',
-    measurementId: 'G-MVB5XSJG2X',
+    apiKey: 'AIzaSyC9ooktILWnxpN-_i8cCHZo8MC9cdC5KeM',
+    appId: '1:446485237252:web:5dba8c6efcec6125c16f51',
+    messagingSenderId: '446485237252',
+    projectId: 'miabe-assistant',
+    authDomain: 'miabe-assistant.firebaseapp.com',
+    storageBucket: 'miabe-assistant.firebasestorage.app',
+    measurementId: 'G-1T6F82YX1V',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC25t9OVxlhHPmn97b4WykHKIqEbE2RaOY',
-    appId: '1:39495723329:android:f351f759dc805d14a159c0',
-    messagingSenderId: '39495723329',
-    projectId: 'polyassistant-d250a',
-    storageBucket: 'polyassistant-d250a.firebasestorage.app',
+    apiKey: 'AIzaSyCrZrIrMyGvCxXMxDms_bI8d8vc6G1iKT4',
+    appId: '1:446485237252:android:1261c870ef43ac2bc16f51',
+    messagingSenderId: '446485237252',
+    projectId: 'miabe-assistant',
+    storageBucket: 'miabe-assistant.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyACZNn7BfsFmkJqqhb1cbxH0Qminzn3mhs',
-    appId: '1:39495723329:ios:c83634793ca0b397a159c0',
-    messagingSenderId: '39495723329',
-    projectId: 'polyassistant-d250a',
-    storageBucket: 'polyassistant-d250a.firebasestorage.app',
-    iosBundleId: 'com.example.polyassistant',
+    apiKey: 'AIzaSyCdIHWiuFV3NZfZkW-fIO_qUc1ho8RZyr0',
+    appId: '1:446485237252:ios:a4e81f1e59f2d415c16f51',
+    messagingSenderId: '446485237252',
+    projectId: 'miabe-assistant',
+    storageBucket: 'miabe-assistant.firebasestorage.app',
+    androidClientId: '446485237252-i2je9vg1kv4ilvj0l4kgucod850qo3va.apps.googleusercontent.com',
+    iosClientId: '446485237252-dbuk8kafdav5a0k8afolp2enhq4a8j62.apps.googleusercontent.com',
+    iosBundleId: 'com.miabe.assistant',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyACZNn7BfsFmkJqqhb1cbxH0Qminzn3mhs',
-    appId: '1:39495723329:ios:c83634793ca0b397a159c0',
-    messagingSenderId: '39495723329',
-    projectId: 'polyassistant-d250a',
-    storageBucket: 'polyassistant-d250a.firebasestorage.app',
-    iosBundleId: 'com.example.polyassistant',
+    apiKey: 'AIzaSyCdIHWiuFV3NZfZkW-fIO_qUc1ho8RZyr0',
+    appId: '1:446485237252:ios:a4e81f1e59f2d415c16f51',
+    messagingSenderId: '446485237252',
+    projectId: 'miabe-assistant',
+    storageBucket: 'miabe-assistant.firebasestorage.app',
+    androidClientId: '446485237252-i2je9vg1kv4ilvj0l4kgucod850qo3va.apps.googleusercontent.com',
+    iosClientId: '446485237252-dbuk8kafdav5a0k8afolp2enhq4a8j62.apps.googleusercontent.com',
+    iosBundleId: 'com.miabe.assistant',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCHxblJprbNN2TBPWiFDdbQhySyfAS52es',
-    appId: '1:39495723329:web:80fafac12753d416a159c0',
-    messagingSenderId: '39495723329',
-    projectId: 'polyassistant-d250a',
-    authDomain: 'polyassistant-d250a.firebaseapp.com',
-    storageBucket: 'polyassistant-d250a.firebasestorage.app',
-    measurementId: 'G-DTD2PQH83G',
+    apiKey: 'AIzaSyC9ooktILWnxpN-_i8cCHZo8MC9cdC5KeM',
+    appId: '1:446485237252:web:2926246646e4dfc5c16f51',
+    messagingSenderId: '446485237252',
+    projectId: 'miabe-assistant',
+    authDomain: 'miabe-assistant.firebaseapp.com',
+    storageBucket: 'miabe-assistant.firebasestorage.app',
+    measurementId: 'G-98QYZSEGRR',
   );
 }

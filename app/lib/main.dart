@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
 import 'package:miabeassistant/pages/login_page.dart';
 import 'package:miabeassistant/pages/home_page.dart';
 import 'package:miabeassistant/pages/chat_page.dart';
@@ -13,11 +11,8 @@ import 'package:miabeassistant/pages/profile_page.dart';
 import 'package:miabeassistant/pages/edit_profile_page.dart';
 import 'package:miabeassistant/pages/splash_screen_page.dart';
 import 'package:miabeassistant/pages/onboarding_page.dart';
-import 'package:miabeassistant/pages/department_selection_page.dart';
 import 'package:miabeassistant/providers/theme_provider.dart';
-import 'package:miabeassistant/providers/department_provider.dart';
 import 'package:miabeassistant/pages/notifications_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
 import 'package:miabeassistant/config/app_config.dart';
 import 'package:miabeassistant/config/supabase_config.dart';
@@ -26,7 +21,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialiser Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
   // Initialiser Supabase
   await SupabaseConfig.initialize();
@@ -43,7 +37,6 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => DepartmentProvider()),
       ],
       child: const MyApp(),
     ),
@@ -59,7 +52,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Miabe Assistant',
+      title: 'Miabé ASSISTANT',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.darkMode ? ThemeMode.dark : ThemeMode.light,
@@ -67,7 +60,6 @@ class MyApp extends StatelessWidget {
       routes: {
         '/splash': (context) => const SplashScreenPage(),
         '/onboarding': (context) => const OnboardingPage(),
-        '/department_selection': (context) => const DepartmentSelectionPage(),
         '/login': (context) => const LoginPage(title: 'Connexion'),
         '/redirection': (context) => const RedirectionPage(),
         '/home': (context) => const HomePage(title: 'Accueil'),
@@ -81,23 +73,18 @@ class MyApp extends StatelessWidget {
       },
       onGenerateRoute: (settings) {
         // Handle the special route that decides between onboarding, login, and department selection
-        if (settings.name == '/onboarding_or_department') {
+        if (settings.name == '/initial') {
           return MaterialPageRoute(
             builder: (context) {
-              final departmentProvider = Provider.of<DepartmentProvider>(context, listen: false);
               final user = FirebaseAuth.instance.currentUser;
               
-              // If first launch, show onboarding
-              if (departmentProvider.isFirstLaunch) {
-                return const OnboardingPage();
+              // If user is authenticated, go to Home
+              if (user != null) {
+                return const HomePage(title: 'Accueil');
               } 
-              // If not first launch but user not authenticated, show login
-              else if (user == null) {
-                return const LoginPage(title: 'Connexion');
-              } 
-              // If user is authenticated, show department selection
+              // Otherwise show login
               else {
-                return const DepartmentSelectionPage();
+                return const WelcomePage(title: 'Bienvenue');
               }
             },
           );

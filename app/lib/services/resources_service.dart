@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 import '../config/supabase_config.dart';
 
 class ResourcesService {
@@ -19,7 +20,7 @@ class ResourcesService {
       
       return filieres.toList();
     } catch (e) {
-      print('Erreur getFilieres: $e');
+      debugPrint('Erreur getFilieres: $e');
       return [];
     }
   }
@@ -40,7 +41,7 @@ class ResourcesService {
       
       return semestres.toList();
     } catch (e) {
-      print('Erreur getSemestres: $e');
+      debugPrint('Erreur getSemestres: $e');
       return [];
     }
   }
@@ -62,7 +63,7 @@ class ResourcesService {
       
       return matieres.toList();
     } catch (e) {
-      print('Erreur getMatieres: $e');
+      debugPrint('Erreur getMatieres: $e');
       return [];
     }
   }
@@ -100,7 +101,7 @@ class ResourcesService {
       
       return pdfs;
     } catch (e) {
-      print('Erreur getPdfs: $e');
+      debugPrint('Erreur getPdfs: $e');
       return [];
     }
   }
@@ -171,7 +172,7 @@ class ResourcesService {
       
       return {'filieres': filieres};
     } catch (e) {
-      print('Erreur getFullManifest: $e');
+      debugPrint('Erreur getFullManifest: $e');
       return {'filieres': []};
     }
   }

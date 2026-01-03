@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Auth {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -8,7 +8,7 @@ class Auth {
     scopes: ['email', 'profile'],
     // Configuration spécifique pour le web
     clientId: kIsWeb
-        ? '39495723329-7umbp2plplt743kmj7ekehtha15rsplm.apps.googleusercontent.com'
+        ? 'YOUR_GOOGLE_SIGNIN_CLIENT_ID'
         : null,
   );
 
@@ -20,6 +20,10 @@ class Auth {
       email: email,
       password: password,
     );
+    
+    // Sauvegarder l'email dans SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', email);
   }
 
   Future<void> createUserWithEmailAndPassword(
@@ -36,6 +40,11 @@ class Auth {
 
     // Mise à jour du profil avec le pseudo comme displayName
     await userCredential.user!.updateDisplayName(pseudo);
+    
+    // Sauvegarder les données dans SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', email);
+    await prefs.setString('pseudo', pseudo);
     
     // Note: Pour stocker nom et prénom, vous devrez utiliser Firestore
     // Exemple: await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
@@ -88,13 +97,35 @@ class Auth {
       idToken: googleAuth.idToken,
     );
 
-    return await _firebaseAuth.signInWithCredential(credential);
+    final userCredential = await _firebaseAuth.signInWithCredential(credential);
+    
+    // Sauvegarder les données dans SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    if (userCredential.user?.email != null) {
+      await prefs.setString('email', userCredential.user!.email!);
+    }
+    if (userCredential.user?.displayName != null) {
+      await prefs.setString('pseudo', userCredential.user!.displayName!);
+    }
+    
+    return userCredential;
   }
 
   Future<UserCredential> _signInWithGoogleWeb() async {
     // Pour le web, utilise la méthode native de Firebase Auth
     final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-    return await _firebaseAuth.signInWithPopup(googleProvider);
+    final userCredential = await _firebaseAuth.signInWithPopup(googleProvider);
+    
+    // Sauvegarder les données dans SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    if (userCredential.user?.email != null) {
+      await prefs.setString('email', userCredential.user!.email!);
+    }
+    if (userCredential.user?.displayName != null) {
+      await prefs.setString('pseudo', userCredential.user!.displayName!);
+    }
+    
+    return userCredential;
   }
 
   Future<UserCredential?> signInWithGitHub() async {

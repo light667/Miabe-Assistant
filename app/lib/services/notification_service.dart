@@ -1,5 +1,4 @@
 /*import 'package:flutter/material.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
@@ -71,7 +70,7 @@ class NotificationService {
 
     await _localNotifications.show(
       0,
-      message.notification?.title ?? 'Miabe Assistant',
+      message.notification?.title ?? 'Miabé ASSISTANT',
       message.notification?.body ?? 'Nouvelle notification',
       platformDetails,
     );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -14,17 +13,18 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
-  String _selectedFiliere = 'LF Génie Mécanique';
+  String _selectedFiliere = 'Licence Fondamentale - Génie Mécanique';
   String _selectedSemester = 'Semestre 1';
   String _email = '';
 
   final List<String> _filieres = [
-    'LF Génie Mécanique',
-    'LF Génie Civil',
-    'LF Génie Électrique',
-    'LF IA & BigData',
-    'LF Informatique et Système',
-    'LF Logistique et Transport',
+    'Licence Fondamentale - Génie Civil',
+    'Licence Fondamentale - Génie Électrique',
+    'Licence Fondamentale - Génie Mécanique',
+    'Licence Fondamentale - Intelligence Artificielle & Big Data',
+    'Licence Fondamentale - Informatique et Système',
+    'Licence Fondamentale - Logistique et Transport',
+    'Licence Professionnelle - Génie Logiciel',
   ];
 
   final List<String> _semesters = [
@@ -50,7 +50,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _usernameController.text =
             prefs.getString('pseudo') ?? user?.displayName ?? '';
         _email = user?.email ?? prefs.getString('email') ?? 'Non défini';
-        _selectedFiliere = prefs.getString('filiere') ?? 'LF Génie Mécanique';
+        _selectedFiliere = prefs.getString('filiere') ?? 'Licence Fondamentale - Génie Mécanique';
         _selectedSemester = prefs.getString('semestre') ?? 'Semestre 1';
       });
     }

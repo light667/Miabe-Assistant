@@ -6,57 +6,11 @@ import 'package:provider/provider.dart';
 import 'package:miabeassistant/providers/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:miabeassistant/constants/app_theme.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.title});
   final String title;
-
-  Future<void> _sendFeedback(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final pseudo = prefs.getString('pseudo') ?? 'Utilisateur anonyme';
-    final filiere = prefs.getString('filiere') ?? 'Non défini';
-    final semestre = prefs.getString('semestre') ?? 'Non défini';
-
-    final subject = 'Feedback Miabe Assistant - $pseudo';
-    final body =
-        'Bonjour,\n\nJe suis $pseudo ($filiere, $semestre).\n\nMes idées/suggestions/appreciations :\n\n';
-    final uri = Uri(
-      scheme: 'mailto',
-      path: 'nethaniahdjossou@gmail.com',
-      queryParameters: {'subject': subject, 'body': body},
-    );
-
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Email de feedback ouvert !'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Impossible d\'ouvrir l\'email. Utilisez votre app de messagerie.',
-              ),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,174 +18,149 @@ class SettingsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 48,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
-          onPressed: () => Navigator.pop(context),
-          padding: EdgeInsets.zero,
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 16),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-        elevation: 2,
+        title: Text(title),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         children: [
           Text(
-            'Paramètres',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            'Préférences',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
+              color: AppTheme.primary,
             ),
-          ).animate().fadeIn(duration: 600.ms),
+          ).animate().fadeIn(),
+          
           const SizedBox(height: 16),
-          ListTile(
-            leading: const FaIcon(
-              FontAwesomeIcons.user,
-              color: Color(0xFF1E3A8A),
+          
+          _buildSettingsTile(
+            context,
+            icon: FontAwesomeIcons.user,
+            title: 'Mon Profil',
+            onTap: () => Navigator.pushNamed(context, '/profile'),
+          ),
+          
+          _buildSettingsTile(
+            context,
+            icon: FontAwesomeIcons.bell,
+            title: 'Notifications',
+            onTap: () => Navigator.pushNamed(context, '/notifications'),
+          ),
+
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardTheme.color,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppTheme.softShadow,
+              border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
             ),
-            title: const Text('Profil'),
-            onTap: () {
-              Navigator.pushNamed(context, '/profile');
-            },
-          ).animate().fadeIn(duration: 800.ms).slideY(),
-          ListTile(
-            leading: const FaIcon(
-              FontAwesomeIcons.bell,
-              color: Color(0xFF1E3A8A),
-            ),
-            title: const Text('Notifications'),
-            onTap: () {
-              Navigator.pushNamed(context, '/notifications');
-            },
-          ).animate().fadeIn(duration: 1000.ms).slideY(),
-          ListTile(
-            leading: const FaIcon(
-              FontAwesomeIcons.moon,
-              color: Color(0xFF1E3A8A),
-            ),
-            title: const Text('Mode sombre'),
-            trailing: Switch(
-              value: themeProvider.darkMode,
-              onChanged: (value) {
-                themeProvider.toggleTheme(value);
-              },
-              activeThumbColor: const Color(0xFFFBBF24),
-            ),
-            onTap: () {
-              themeProvider.toggleTheme(!themeProvider.darkMode);
-            },
-          ).animate().fadeIn(duration: 1200.ms).slideY(),
-          ListTile(
-            leading: const FaIcon(
-              FontAwesomeIcons.message,
-              color: Color(0xFF1E3A8A),
-            ),
-            title: const Text('Envoyer un Feedback'),
-            subtitle: const Text(
-              'Partagez vos idées, suggestions et appréciations',
-            ),
-            onTap: () async {
-              await _sendFeedback(context);
-            },
-          ).animate().fadeIn(duration: 1400.ms).slideY(),
-          ListTile(
-            leading: const FaIcon(
-              FontAwesomeIcons.circleInfo,
-              color: Color(0xFF1E3A8A),
-            ),
-            title: const Text('À propos'),
-            onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'Miabe Assistant',
-                applicationVersion: '1.0.0',
-                applicationIcon: const Icon(
-                  Icons.school,
-                  color: Color(0xFF1E3A8A),
-                  size: 40,
+            child: SwitchListTile(
+              secondary: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              );
-            },
-          ).animate().fadeIn(duration: 1600.ms).slideY(),
-          ListTile(
-            leading: const FaIcon(
-              FontAwesomeIcons.rightFromBracket,
-              color: Color(0xFF1E3A8A),
+                child: FaIcon(FontAwesomeIcons.moon, color: AppTheme.primary, size: 20),
+              ),
+              title: const Text("Mode Sombre", style: TextStyle(fontWeight: FontWeight.w600)),
+              value: themeProvider.darkMode,
+              onChanged: (val) => themeProvider.toggleTheme(val),
+              activeColor: AppTheme.secondary,
             ),
-            title: const Text('Déconnexion'),
+          ).animate().fadeIn().slideX(),
+
+          const SizedBox(height: 24),
+          
+          Text(
+            'Support',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.primary,
+            ),
+          ).animate().fadeIn(delay: 200.ms),
+          
+          const SizedBox(height: 16),
+
+          _buildSettingsTile(
+            context,
+            icon: FontAwesomeIcons.message,
+            title: 'Envoyer un Feedback',
+            subtitle: "Partagez vos idées",
+            onTap: () => _sendFeedback(context),
+          ),
+          
+          _buildSettingsTile(
+            context,
+            icon: FontAwesomeIcons.circleInfo,
+            title: 'À propos',
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'Miabé ASSISTANT',
+              applicationVersion: '2.0.0',
+              applicationIcon: const Icon(Icons.school, size: 40, color: AppTheme.primary),
+            ),
+          ),
+
+           const SizedBox(height: 24),
+
+           _buildSettingsTile(
+            context,
+            icon: FontAwesomeIcons.rightFromBracket,
+            title: 'Déconnexion',
+            isDestructive: true,
             onTap: () async {
               await Auth().logout();
-              if (!context.mounted) return;
-              Navigator.pushReplacementNamed(context, '/welcome');
+              if (context.mounted) Navigator.pushReplacementNamed(context, '/welcome');
             },
-          ).animate().fadeIn(duration: 1800.ms).slideY(),
-          ListTile(
-            leading: const FaIcon(
-              FontAwesomeIcons.phone,
-              color: Color(0xFF1E3A8A),
-            ),
-            title: const Text('Nous contacter'),
-            subtitle: const Text('LinkedIn et WhatsApp'),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Nous contacter'),
-                    content: const Text('Choisissez comment nous contacter :'),
-                    actions: [
-                      TextButton(
-                        onPressed: () async {
-                          final url =
-                              'https://www.linkedin.com/in/kokou-light-djossou-90216233b';
-                          if (await canLaunchUrl(Uri.parse(url))) {
-                            await launchUrl(Uri.parse(url));
-                          }
-                        },
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FaIcon(
-                              FontAwesomeIcons.linkedin,
-                              color: Color(0xFF0077B5),
-                            ),
-                            SizedBox(width: 8),
-                            Text('LinkedIn'),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          final url = 'https://wa.link/hhk3di';
-                          if (await canLaunchUrl(Uri.parse(url))) {
-                            await launchUrl(Uri.parse(url));
-                          }
-                        },
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FaIcon(
-                              FontAwesomeIcons.whatsapp,
-                              color: Color(0xFF25D366),
-                            ),
-                            SizedBox(width: 8),
-                            Text('WhatsApp'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ).animate().fadeIn(duration: 1800.ms).slideY(),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildSettingsTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required VoidCallback onTap, bool isDestructive = false}) {
+    final color = isDestructive ? AppTheme.error : AppTheme.primary;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.softShadow,
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: FaIcon(icon, color: color, size: 20),
+        ),
+        title: Text(
+          title, 
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: isDestructive ? AppTheme.error : null,
+          ),
+        ),
+        subtitle: subtitle != null ? Text(subtitle) : null,
+        trailing: const Icon(Icons.chevron_right, size: 20),
+        onTap: onTap,
+      ),
+    ).animate().fadeIn().slideX();
+  }
+
+  Future<void> _sendFeedback(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final pseudo = prefs.getString('pseudo') ?? 'Anonyme';
+    final uri = Uri(
+      scheme: 'mailto',
+      path: 'nethaniahdjossou@gmail.com',
+      queryParameters: {'subject': 'Feedback Miabé ASSISTANT - $pseudo'},
+    );
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 }

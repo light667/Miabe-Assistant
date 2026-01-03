@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:url_launcher/url_launcher.dart';
-import '../services/resources_service.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:miabeassistant/services/resources_service.dart';
+import 'package:miabeassistant/constants/app_theme.dart';
 
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
@@ -20,22 +22,18 @@ class _ResourcesPageState extends State<ResourcesPage> {
   final ResourcesService _resourcesService = ResourcesService();
   bool _isLoadingFromSupabase = false;
 
-  static const Color primaryBlue = Color(0xFF1976D2);
-  static const Color cardBackground = Color(0xFFF5F6F5);
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
-
   // Mapping des noms techniques vers noms affichables
   String _getFiliereDisplayName(String technicalName) {
     const Map<String, String> displayNames = {
-      'lf_genie_civil': 'Génie Civil',
-      'lf_genie_electrique': 'Génie Électrique',
-      'lf_genie_mecanique': 'Génie Mécanique',
-      'lf_iabigdata': 'Intelligence Artificielle & Big Data',
-      'lf_informatiquesysteme': 'Informatique et Système',
-      'lf_logistiquetransport': 'Logistique et Transport',
+      'lf_genie_civil': 'Licence Fondamentale - Génie Civil',
+      'lf_genie_electrique': 'Licence Fondamentale - Génie Électrique',
+      'lf_genie_mecanique': 'Licence Fondamentale - Génie Mécanique',
+      'lf_iabigdata': 'Licence Fondamentale - Intelligence Artificielle & Big Data',
+      'lf_informatiquesysteme': 'Licence Fondamentale - Informatique et Système',
+      'lf_logistiquetransport': 'Licence Fondamentale - Logistique et Transport',
+      'lpro_genie_logiciel': 'Licence Professionnelle - Génie Logiciel',
     };
-    return displayNames[technicalName] ?? technicalName.replaceAll('lf_', '').replaceAll('_', ' ');
+    return displayNames[technicalName] ?? technicalName.replaceAll('lf_', '').replaceAll('lpro_', '').replaceAll('_', ' ');
   }
 
   @override
@@ -57,26 +55,11 @@ class _ResourcesPageState extends State<ResourcesPage> {
     });
     
     try {
-      // Essayer de charger depuis Supabase
-      final manifest = await _resourcesService.getFullManifest();
-      
-      if (mounted && manifest['filieres'].isNotEmpty) {
-        setState(() {
-          filieres = manifest['filieres'];
-          _isLoadingFromSupabase = false;
-        });
-        return;
-      }
-    } catch (e) {
-      debugPrint('⚠️ Erreur Supabase, fallback sur le manifest local: $e');
-    }
-    
-    // Fallback sur le manifest local
-    try {
       final String response = await rootBundle.loadString(
         'assets/resources_manifest_online.json',
       );
       final data = json.decode(response);
+      
       if (mounted) {
         setState(() {
           filieres = data["filieres"];
@@ -84,6 +67,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
         });
       }
     } catch (e) {
+      debugPrint('❌ Erreur chargement local: $e');
       if (mounted) {
         setState(() {
           _isLoadingFromSupabase = false;
@@ -115,35 +99,39 @@ class _ResourcesPageState extends State<ResourcesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 56,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
+        title: Text(
           "Ressources Pédagogiques",
-          style: TextStyle(
-            fontSize: 18,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
-        backgroundColor: primaryBlue,
-        elevation: 2,
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: filieres.isEmpty
-          ? const Center(child: CircularProgressIndicator(color: primaryBlue))
+          ? Center(child: CircularProgressIndicator(color: AppTheme.primary))
           : _buildStepContent(),
     );
   }
 
   Widget _buildStepContent() {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 300),
       transitionBuilder: (Widget child, Animation<double> animation) {
-        return FadeTransition(opacity: animation, child: child);
+        return FadeTransition(opacity: animation, child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0.05, 0), end: Offset.zero).animate(animation),
+          child: child,
+        ));
       },
-      child: _buildCurrentStep(),
+      child: KeyedSubtree(
+        key: ValueKey(selectedFiliere?.toString() ?? 'root' + (selectedSemestre?.toString() ?? '') + (selectedMatiere?.toString() ?? '')),
+        child: _buildCurrentStep(),
+      ),
     );
   }
 
@@ -165,115 +153,71 @@ class _ResourcesPageState extends State<ResourcesPage> {
       itemCount: filieres.length,
       itemBuilder: (context, index) {
         final filiere = filieres[index];
-        return _buildFiliereCard(filiere);
-      },
-    );
-  }
-
-  Widget _buildFiliereCard(Map<String, dynamic> filiere) {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      color: cardBackground,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 8.0,
-        ),
-        leading: Icon(Icons.school, color: primaryBlue, size: 24),
-        title: Text(
-          _getFiliereDisplayName(filiere["name"]),
-          style: TextStyle(
-            color: textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Text(
-          "${filiere["semestres"].length} semestres",
-          style: TextStyle(color: textSecondary, fontSize: 14),
-        ),
-        onTap: () {
-          if (mounted) {
+        return _buildCard(
+          title: _getFiliereDisplayName(filiere["name"]),
+          subtitle: "${filiere["semestres"].length} semestres",
+          icon: Icons.school_outlined,
+          onTap: () {
             setState(() {
               selectedFiliere = filiere;
               selectedSemestre = null;
               selectedMatiere = null;
             });
-          }
-        },
-      ),
+          },
+          delay: index * 50,
+        );
+      },
     );
   }
 
   Widget _buildSemestreSelection() {
     return Column(
       children: [
-        _buildBackButton(() => setState(() => selectedFiliere = null)),
+        _buildHeader("Choisissez un semestre", () => setState(() => selectedFiliere = null)),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: selectedFiliere!["semestres"].length,
             itemBuilder: (context, index) {
               final semestre = selectedFiliere!["semestres"][index];
-              return _buildSemestreCard(semestre);
+              return _buildCard(
+                title: semestre["name"],
+                icon: Icons.calendar_today_outlined,
+                onTap: () {
+                  setState(() {
+                    selectedSemestre = semestre;
+                    selectedMatiere = null;
+                  });
+                },
+                delay: index * 50,
+              );
             },
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSemestreCard(Map<String, dynamic> semestre) {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      color: cardBackground,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 8.0,
-        ),
-        title: Text(
-          semestre["name"],
-          style: TextStyle(
-            color: textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        onTap: () {
-          if (mounted) {
-            setState(() {
-              selectedSemestre = semestre;
-              selectedMatiere = null;
-            });
-          }
-        },
-      ),
     );
   }
 
   Widget _buildMatiereSelection() {
     return Column(
       children: [
-        _buildBackButton(() => setState(() => selectedSemestre = null)),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            "Sélectionnez une matière pour accéder aux ressources.",
-            style: TextStyle(fontSize: 14, color: textSecondary),
-          ),
-        ),
+        _buildHeader("Choisissez une matière", () => setState(() => selectedSemestre = null)),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: selectedSemestre!["matieres"].length,
             itemBuilder: (context, index) {
               final matiere = selectedSemestre!["matieres"][index];
-              return _buildMatiereCard(matiere);
+              return _buildCard(
+                title: matiere["name"].toUpperCase(),
+                icon: Icons.book_outlined,
+                onTap: () {
+                  setState(() {
+                    selectedMatiere = matiere;
+                  });
+                },
+                delay: index * 50,
+              );
             },
           ),
         ),
@@ -281,59 +225,37 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
-  Widget _buildMatiereCard(Map<String, dynamic> matiere) {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      color: cardBackground,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 8.0,
-        ),
-        leading: Icon(Icons.book, color: primaryBlue, size: 24),
-        title: Text(
-          matiere["name"].toUpperCase(),
-          style: TextStyle(
-            color: textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        onTap: () {
-          if (mounted) {
-            setState(() {
-              selectedMatiere = matiere;
-            });
-          }
-        },
-      ),
-    );
-  }
-
   Widget _buildPdfSelection() {
     return Column(
       children: [
-        _buildBackButton(() => setState(() => selectedMatiere = null)),
+        _buildHeader("Ressources disponibles", () => setState(() => selectedMatiere = null)),
         Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Filière : ${selectedFiliere!["name"].toUpperCase()}",
-                style: TextStyle(fontSize: 14, color: textSecondary),
-              ),
-              Text(
-                "Semestre : ${selectedSemestre!["name"]}",
-                style: TextStyle(fontSize: 14, color: textSecondary),
-              ),
-              Text(
-                "Matière : ${selectedMatiere!["name"].toUpperCase()}",
-                style: TextStyle(fontSize: 14, color: textSecondary),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  "Filière : ${selectedFiliere!["name"].toUpperCase()}",
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                ),
+                Text(
+                  "Semestre : ${selectedSemestre!["name"]}",
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Matière : ${selectedMatiere!["name"].toUpperCase()}",
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                ),
+              ],
+            ),
           ),
         ),
         Expanded(
@@ -342,7 +264,13 @@ class _ResourcesPageState extends State<ResourcesPage> {
             itemCount: selectedMatiere!["pdfs"].length,
             itemBuilder: (context, index) {
               final pdf = selectedMatiere!["pdfs"][index];
-              return _buildPdfCard(pdf);
+              return _buildCard(
+                title: pdf["name"],
+                icon: Icons.picture_as_pdf_outlined,
+                isPdf: true,
+                onTap: () => _openPdf(pdf["url"]),
+                delay: index * 50,
+              );
             },
           ),
         ),
@@ -350,53 +278,109 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
-  Widget _buildPdfCard(Map<String, dynamic> pdf) {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      color: cardBackground,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 8.0,
-        ),
-        leading: Icon(Icons.picture_as_pdf, color: primaryBlue, size: 24),
-        title: Text(
-          pdf["name"],
-          style: TextStyle(
-            color: textPrimary,
-            fontWeight: FontWeight.w500,
-            fontSize: 16,
+  Widget _buildHeader(String title, VoidCallback onBack) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1))),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: onBack,
+            style: IconButton.styleFrom(
+              backgroundColor: Theme.of(context).cardTheme.color,
+              padding: const EdgeInsets.all(8),
+            ),
           ),
-        ),
-        onTap: () => _openPdf(pdf["url"]),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBackButton(VoidCallback onPressed) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-      child: ElevatedButton(
-        onPressed: () {
-          if (mounted) onPressed();
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: cardBackground,
-          foregroundColor: primaryBlue,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 2,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.arrow_back, size: 16),
-            SizedBox(width: 4),
-            Text("Retour", style: TextStyle(fontSize: 14)),
-          ],
+  Widget _buildCard({
+    required String title,
+    String? subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isPdf = false,
+    int delay = 0,
+  }) {
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.softShadow,
+        border: Border.all(
+            color: isPdf 
+                ? AppTheme.secondary.withValues(alpha: 0.3) 
+                : Theme.of(context).dividerColor.withValues(alpha: 0.1)
         ),
       ),
-    );
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isPdf 
+                        ? Colors.red.withValues(alpha: 0.1) 
+                        : AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon, 
+                    color: isPdf ? Colors.red : AppTheme.primary,
+                    size: 24
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Theme.of(context).disabledColor,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ).animate(delay: Duration(milliseconds: delay)).fadeIn().slideX(begin: 0.1, end: 0);
   }
 }

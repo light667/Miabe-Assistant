@@ -3,62 +3,34 @@
 <head>
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
-  <title>Miabe Assistant - Réussir tes études supérieures</title>
+  <title>Miabé ASSISTANT - L'excellence en ingénierie</title>
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="google-signin-client_id" content="39495723329-7umbp2plplt743kmj7ekehtha15rsplm.apps.googleusercontent.com">
+  <meta name="google-signin-client_id" content="YOUR_GOOGLE_SIGNIN_CLIENT_ID">
   <!-- SEO -->
-  <meta name="description" content="Miabe Assistant - Ton compagnon pour réussir tes études supérieures au Togo">
-  <meta name="keywords" content="éducation, études supérieures, ressources, pdf, étudiants, Togo, Miabe">
+  <meta name="description" content="Miabé ASSISTANT - Votre compagnon pour les études d'ingénierie et de technologie au Togo">
+  <meta name="keywords" content="éducation, ingénierie, polytechnique, ressources, pdf, étudiants, Togo, Miabé ASSISTANT">
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Miabe Assistant">
-  <!-- Logo Miabe Assistant -->
-  <link rel="apple-touch-icon" href="icons/miabe_logo.png">
+  <meta name="apple-mobile-web-app-title" content="Miabé ASSISTANT">
+  <!-- Logo Miabé ASSISTANT -->
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="icons/miabe_logo.png"/>
+  <link rel="icon" type="image/png" href="icons/Icon-192.png"/>
   <link rel="manifest" href="manifest.json">
-  <script src="flutter.js" defer></script>
   <script src="https://apis.google.com/js/platform.js" async defer></script>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <!-- Flutter JS -->
-  <script src="main.dart.js" type="application/javascript"></script>
+  <!-- Flutter bootstrap (dev server injects scripts in debug) -->
 
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
-  <script type="module">
-      // Import Firebase
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-
-      // Your Firebase config
-      const firebaseConfig = {
-        apiKey: "AIzaSyCHxblJprbNN2TBPWiFDdbQhySyfAS52es",
-        authDomain: "polyassistant-d250a.firebaseapp.com",
-        projectId: "polyassistant-d250a",
-        storageBucket: "polyassistant-d250a.firebasestorage.app",
-        messagingSenderId: "39495723329",
-        appId: "1:39495723329:web:39625f8b1e91e708a159c0",
-        measurementId: "G-MVB5XSJG2X"
-      };
-
-      // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
-    </script>
-  <script src="main.dart.js" type="application/javascript"></script>
-  <script>
-    // Service worker pour le caching
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('flutter.js');
-      });
-    }
-  </script>
+<!-- Firebase config removed -->
+  <!-- In debug, main.dart.js is not loaded directly; dev server handles modules -->
+  <!-- Service worker: disabled in debug; Flutter registers in release builds -->
 </body>
 </html>

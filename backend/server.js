@@ -12,8 +12,8 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors({
   origin: [
-    'https://polyassistant-d250a.web.app',
-    'https://polyassistant-d250a.firebaseapp.com',
+    'https://YOUR_NEW_PROJECT_ID.web.app',
+    'https://YOUR_NEW_PROJECT_ID.firebaseapp.com',
     'http://localhost:*',
     /\.web\.app$/,
     /\.firebaseapp\.com$/

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
 Generate resources manifest from Supabase Storage
-All filières point to tronc_commun for S1 and S2
+All filières point to tronc_commun for S1, S2 and S3
 """
 
 import json
-from supabase import create_client
 import os
+import unicodedata
+import re
 
 # Configuration Supabase
 SUPABASE_URL = "https://gtnyqqstqfwvncnymptm.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0bnlxcXN0cWZ3dm5jbnltcHRtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTk4MjM1MCwiZXhwIjoyMDgxNTU4MzUwfQ.y7IZiOwner7JLT5-Gp3ngnqy-YrOlbkSI7hgPMLWlOM"
 
 # Liste des filières
 FILIERES = [
@@ -19,18 +19,32 @@ FILIERES = [
     "lf_genie_mecanique",
     "lf_iabigdata",
     "lf_informatiquesysteme",
-    "lf_logistiquetransport"
+    "lf_logistiquetransport",
+    "lpro_genie_logiciel"
 ]
+
+def sanitize_path(path):
+    """
+    Nettoie le chemin pour Supabase en enlevant les accents et caractères spéciaux
+    """
+    # Normaliser Unicode (décomposer les accents)
+    nfkd = unicodedata.normalize('NFKD', path)
+    # Enlever les accents
+    without_accents = ''.join([c for c in nfkd if not unicodedata.combining(c)])
+    # Remplacer les espaces et caractères spéciaux
+    sanitized = re.sub(r'[^\w\s/.-]', '', without_accents)
+    # Remplacer les espaces multiples par un seul underscore
+    sanitized = re.sub(r'\s+', '_', sanitized)
+    return sanitized
 
 def fetch_all_files():
     """Récupère tous les fichiers en naviguant dans l'arborescence locale"""
-    import os
     
     all_files = []
     base_path = "resources/tronc_commun"
     
-    # Parcourir semestre_1 et semestre_2
-    for semestre in ["semestre_1", "semestre_2"]:
+    # Parcourir semestre_1, semestre_2 et semestre_3
+    for semestre in ["semestre_1", "semestre_2", "semestre_3"]:
         semestre_path = os.path.join(base_path, semestre)
         if not os.path.exists(semestre_path):
             continue
@@ -40,12 +54,21 @@ def fetch_all_files():
             matiere_path = os.path.join(semestre_path, matiere)
             if not os.path.isdir(matiere_path):
                 continue
+            
+            # Nettoyer le nom de la matière pour Supabase
+            matiere_clean = sanitize_path(matiere)
                 
             # Lister les PDFs
             for pdf in os.listdir(matiere_path):
                 if pdf.endswith('.pdf') or pdf.endswith('.docx'):
-                    file_path = f"tronc_commun/{semestre}/{matiere}/{pdf}"
-                    all_files.append({"name": file_path})
+                    # Nettoyer le nom du fichier
+                    pdf_clean = sanitize_path(pdf)
+                    file_path = f"tronc_commun/{semestre}/{matiere_clean}/{pdf_clean}"
+                    all_files.append({
+                        "name": file_path,
+                        "original_matiere": matiere,
+                        "original_filename": pdf
+                    })
     
     return all_files
 
@@ -60,25 +83,25 @@ def organize_by_structure(files):
     for file in files:
         name = file.get("name", "")
         
-        # Ignorer les dossiers
         if not name or name.endswith("/"):
             continue
             
-        # Parser le chemin: tronc_commun/semestre_X/matiere/fichier.pdf
         parts = name.split("/")
         if len(parts) < 4:
             continue
             
         tronc, semestre, matiere, fichier = parts[0], parts[1], parts[2], parts[3]
         
+        matiere_display = file.get("original_matiere", matiere)
+        
         if semestre not in structure:
             structure[semestre] = {}
             
-        if matiere not in structure[semestre]:
-            structure[semestre][matiere] = []
+        if matiere_display not in structure[semestre]:
+            structure[semestre][matiere_display] = []
             
-        structure[semestre][matiere].append({
-            "name": fichier,
+        structure[semestre][matiere_display].append({
+            "name": file.get("original_filename", fichier),
             "url": get_public_url(name),
             "source": "supabase"
         })
@@ -95,14 +118,12 @@ def generate_manifest(structure):
             "semestres": []
         }
         
-        # Pour chaque semestre dans la structure
         for semestre_name in sorted(structure.keys()):
             semestre_data = {
                 "name": semestre_name,
                 "matieres": []
             }
             
-            # Pour chaque matière
             for matiere_name in sorted(structure[semestre_name].keys()):
                 matiere_data = {
                     "name": matiere_name,
@@ -118,7 +139,7 @@ def generate_manifest(structure):
     return manifest
 
 def main():
-    print("🔍 Récupération des fichiers depuis Supabase...")
+    print("🔍 Récupération des fichiers depuis le système local...")
     files = fetch_all_files()
     print(f"✅ {len(files)} fichiers récupérés")
     
@@ -135,8 +156,7 @@ def main():
     print("\n📝 Génération du manifest...")
     manifest = generate_manifest(structure)
     
-    # Sauvegarder
-    output_file = "assets/resources_manifest_online.json"
+    output_file = "app/assets/resources_manifest_online.json"
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
     
@@ -146,7 +166,6 @@ def main():
     print(f"   - {len(structure)} semestres")
     print(f"   - {total_pdfs} PDFs total")
     
-    # Vérification
     for filiere in manifest["filieres"]:
         pdfs_count = sum(
             len(matiere["pdfs"]) 

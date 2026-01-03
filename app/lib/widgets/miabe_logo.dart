@@ -1,69 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:miabeassistant/constants/app_theme.dart';
 
-class MiabeLogo extends StatelessWidget {
+class MiabeLogo extends StatefulWidget {
   final double size;
-  final bool withText;
   final Color? color;
+  final bool isAnimated;
 
   const MiabeLogo({
     super.key,
     this.size = 100,
-    this.withText = false,
     this.color,
+    this.isAnimated = false,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final primaryColor = color ?? colorScheme.primary;
-    final secondaryColor = colorScheme.secondary;
+  State<MiabeLogo> createState() => _MiabeLogoState();
+}
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                primaryColor,
-                primaryColor.withValues(alpha: 0.8),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: primaryColor.withValues(alpha: 0.3),
-                blurRadius: size * 0.2,
-                offset: Offset(0, size * 0.1),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Icon(
-              FontAwesomeIcons.graduationCap,
-              size: size * 0.5,
-              color: Colors.white,
-            ),
-          ),
+class _MiabeLogoState extends State<MiabeLogo> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200));
+    _scaleAnimation = CurvedAnimation(parent: _controller, curve: Curves.elasticOut);
+
+    if (widget.isAnimated) {
+      _controller.forward();
+    } else {
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MiabeLogo oldWidget) {
+    if (widget.isAnimated && !oldWidget.isAnimated) {
+      _controller.forward(from: 0);
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeColor = widget.color ?? AppTheme.primary;
+
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: Image.asset(
+          'assets/images/miabe_logo.png',
+          width: widget.size,
+          height: widget.size,
+          fit: BoxFit.contain,
         ),
-        if (withText) ...[
-          SizedBox(height: size * 0.1),
-          Text(
-            'Miabe Assistant',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: primaryColor,
-              fontSize: size * 0.25,
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
+
+

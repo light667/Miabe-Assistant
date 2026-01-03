@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
-import 'package:miabeassistant/providers/department_provider.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -66,9 +64,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void _finishOnboarding() async {
-    final departmentProvider = Provider.of<DepartmentProvider>(context, listen: false);
-    await departmentProvider.markOnboardingComplete();
-    
     if (mounted) {
       Navigator.pushReplacementNamed(context, '/login');
     }

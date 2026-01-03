@@ -1,37 +1,37 @@
 {
   "project_info": {
-    "project_number": "39495723329",
-    "project_id": "polyassistant-d250a",
-    "storage_bucket": "polyassistant-d250a.firebasestorage.app"
+    "project_number": "446485237252",
+    "project_id": "miabe-assistant",
+    "storage_bucket": "miabe-assistant.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:39495723329:android:f351f759dc805d14a159c0",
+        "mobilesdk_app_id": "1:446485237252:android:1261c870ef43ac2bc16f51",
         "android_client_info": {
-          "package_name": "com.example.polyassistant"
+          "package_name": "com.miabe.assistant"
         }
       },
       "oauth_client": [
         {
-          "client_id": "39495723329-7umbp2plplt743kmj7ekehtha15rsplm.apps.googleusercontent.com",
+          "client_id": "446485237252-kr9arb1rrq3tmk204bs2dmvq30578vqu.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyC25t9OVxlhHPmn97b4WykHKIqEbE2RaOY"
+          "current_key": "AIzaSyCrZrIrMyGvCxXMxDms_bI8d8vc6G1iKT4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "39495723329-7umbp2plplt743kmj7ekehtha15rsplm.apps.googleusercontent.com",
+              "client_id": "446485237252-kr9arb1rrq3tmk204bs2dmvq30578vqu.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "39495723329-vgo98ti121qlhc6cfjl3d21tbll0u6ia.apps.googleusercontent.com",
+              "client_id": "446485237252-3e031qprgnjndi41ar3q5927l1mnc7c4.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.example.polyassistant"

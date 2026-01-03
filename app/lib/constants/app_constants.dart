@@ -1,7 +1,7 @@
 /// Constantes de l'application Miabe Assistant
 class AppConstants {
   // Informations de l'application
-  static const String appName = 'Miabe Assistant';
+  static const String appName = 'Miabé ASSISTANT';
   static const String appVersion = '1.0.0';
   static const String appDescription = 'Votre succès académique commence ici';
   
