@@ -211,7 +211,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             backgroundColor: Colors.green,
                           ),
                         );
-                        if (context.mounted) Navigator.pop(context);
+                        if (context.mounted) Navigator.pop(context, true);
                       }
                     }
                   },

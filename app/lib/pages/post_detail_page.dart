@@ -6,6 +6,7 @@ import 'package:miabeassistant/constants/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import '../widgets/mention_text.dart';
 
 class PostDetailPage extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -366,6 +367,50 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
+  Future<void> _deletePost() async {
+    try {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Supprimer la publication'),
+          content: const Text('Êtes-vous sûr de vouloir supprimer cette publication ? Cette action est irréversible.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Supprimer'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        await Supabase.instance.client
+            .from('campus_posts')
+            .delete()
+            .eq('id', widget.post['id']);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Publication supprimée')),
+          );
+          Navigator.pop(context, true); // Retourner true pour indiquer la suppression
+        }
+      }
+    } catch (e) {
+      debugPrint('Erreur suppression post: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de la suppression: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final postType = widget.post['type'];
@@ -383,8 +428,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
               onPressed: _markAsResolved,
               tooltip: isResolved ? 'Marquer comme non résolu' : 'Marquer comme résolu',
             ),
+          if (isAuthor)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: _deletePost,
+              tooltip: 'Supprimer la publication',
+            ),
           IconButton(
-            icon: const Icon(Icons.flag),
+            icon: const Icon(Icons.flag_outlined),
             onPressed: () => _reportContent('post', widget.post['id']),
             tooltip: 'Signaler',
           ),
@@ -516,8 +567,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              widget.post['content'],
+            MentionText(
+              text: widget.post['content'],
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             if (hasAttachment) ...[
@@ -649,7 +700,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(comment['content']),
+            MentionText(text: comment['content']),
             const SizedBox(height: 8),
             Row(
               children: [

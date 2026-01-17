@@ -9,6 +9,7 @@ import 'package:miabeassistant/pages/welcome_page.dart';
 import 'package:miabeassistant/pages/redirection_page.dart';
 import 'package:miabeassistant/pages/profile_page.dart';
 import 'package:miabeassistant/pages/edit_profile_page.dart';
+import 'package:miabeassistant/pages/competences_page.dart';
 import 'package:miabeassistant/pages/splash_screen_page.dart';
 import 'package:miabeassistant/pages/onboarding_page.dart';
 import 'package:miabeassistant/providers/theme_provider.dart';
@@ -79,6 +80,7 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => const SettingsPage(title: 'Paramètres'),
         '/profile': (context) => const ProfilePage(),
         '/edit_profile': (context) => const EditProfilePage(),
+        '/competences': (context) => const CompetencesPage(),
         '/notifications': (context) => const NotificationsPage(),
         '/welcome': (context) => const WelcomePage(title: 'Accueil'),
       },

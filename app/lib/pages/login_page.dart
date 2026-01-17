@@ -341,7 +341,7 @@ class _LoginPageState extends State<LoginPage> {
                           const Expanded(child: Divider()),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('Social', style: Theme.of(context).textTheme.bodySmall),
+                            child: Text('Continuer avec', style: Theme.of(context).textTheme.bodySmall),
                           ),
                           const Expanded(child: Divider()),
                         ],
@@ -349,46 +349,26 @@ class _LoginPageState extends State<LoginPage> {
                       
                       const SizedBox(height: 24),
 
-                      // Social Buttons
-                      Row(
-                        children: [
-                           Expanded(
-                            child: _buildSocialButtonWithImage(
-                              imagePath: 'assets/images/github.png',
-                              label: 'GitHub',
-                              onTap: () async {
-                                 // reuse logic...
-                                 setState(() => _isLoading = true);
-                                  try {
-                                    final user = await Auth().signInWithGitHub();
-                                    if (user != null && mounted) Navigator.pushReplacementNamed(context, '/redirection');
-                                  } catch (e) {
-                                    if (mounted) _showErrorSnackBar('Erreur GitHub: $e');
-                                  } finally {
-                                    if (mounted) setState(() => _isLoading = false);
-                                  }
+                      // Social Buttons (GitHub disabled) — center Google button
+                      Center(
+                        child: SizedBox(
+                          width: 260,
+                          child: _buildSocialButtonWithImage(
+                            imagePath: 'assets/images/google.png',
+                            label: 'Google',
+                            onTap: () async {
+                              setState(() => _isLoading = true);
+                              try {
+                                final user = await Auth().signInWithGoogle();
+                                if (user != null && mounted) Navigator.pushReplacementNamed(context, '/redirection');
+                              } catch (e) {
+                                if (mounted) _showErrorSnackBar('Erreur Google: $e');
+                              } finally {
+                                if (mounted) setState(() => _isLoading = false);
                               }
-                            ),
+                            },
                           ),
-                          const SizedBox(width: 16),
-                           Expanded(
-                             child: _buildSocialButtonWithImage(
-                              imagePath: 'assets/images/google.png',
-                              label: 'Google',
-                              onTap: () async {
-                                  setState(() => _isLoading = true);
-                                  try {
-                                    final user = await Auth().signInWithGoogle();
-                                    if (user != null && mounted) Navigator.pushReplacementNamed(context, '/redirection');
-                                  } catch (e) {
-                                    if (mounted) _showErrorSnackBar('Erreur Google: $e');
-                                  } finally {
-                                    if (mounted) setState(() => _isLoading = false);
-                                  }
-                              }
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                       
                       const SizedBox(height: 40),

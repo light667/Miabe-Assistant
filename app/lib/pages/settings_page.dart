@@ -4,10 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:miabeassistant/services/firebase/auth.dart';
 import 'package:provider/provider.dart';
 import 'package:miabeassistant/providers/theme_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
-import 'package:miabeassistant/pages/feedback_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.title});
@@ -38,7 +36,8 @@ class SettingsPage extends StatelessWidget {
             context,
             icon: FontAwesomeIcons.user,
             title: 'Mon Profil',
-            onTap: () => Navigator.pushNamed(context, '/profile'),
+            onTap: () =>
+              Navigator.pushNamed(context, '/profile')
           ),
           
           _buildSettingsTile(
@@ -84,12 +83,30 @@ class SettingsPage extends StatelessWidget {
           
           const SizedBox(height: 16),
 
+          Text(
+            'Rejoindre la communauté',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.primary,
+            ),
+          ).animate().fadeIn(delay: 200.ms),
+          
+          const SizedBox(height: 16),
+
           _buildSettingsTile(
             context,
-            icon: FontAwesomeIcons.message,
-            title: 'Envoyer un Feedback',
-            subtitle: 'Partagez vos idées',
-            onTap: () => _sendFeedback(context),
+            icon: FontAwesomeIcons.whatsapp,
+            title: 'WhatsApp',
+            subtitle: 'Rejoindre notre canal',
+            onTap: () => _launchURL('https://whatsapp.com/channel/0029Vb7kgaaHgZWkkctPEz3s'),
+          ),
+          
+          _buildSettingsTile(
+            context,
+            icon: FontAwesomeIcons.linkedin,
+            title: 'LinkedIn',
+            subtitle: 'Suivez-nous sur LinkedIn',
+            onTap: () => _launchURL('https://www.linkedin.com/company/miab%C3%A9-assistant/'),
           ),
           
           _buildSettingsTile(
@@ -99,7 +116,7 @@ class SettingsPage extends StatelessWidget {
             onTap: () => showAboutDialog(
               context: context,
               applicationName: 'Miabé ASSISTANT',
-              applicationVersion: '2.0.0',
+              applicationVersion: '1.0.0',
               applicationIcon: const Icon(Icons.school, size: 40, color: AppTheme.primary),
             ),
           ),
@@ -154,10 +171,14 @@ class SettingsPage extends StatelessWidget {
     ).animate().fadeIn().slideX();
   }
 
-  Future<void> _sendFeedback(BuildContext context) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const FeedbackPage()),
-    );
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Could not launch $url: $e');
+    }
   }
 }

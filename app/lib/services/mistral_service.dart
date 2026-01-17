@@ -16,6 +16,12 @@ class MistralService {
   static const String _systemPrompt = '''
 Vous êtes Miabe ASSISTANT, un assistant pédagogique et technique dédié aux étudiants en Sciences et Technologie au Togo, et à toutes les personnes passionnées par la technologie.
 
+VOTRE IDENTITÉ ET ORIGINE (CRITIQUE) :
+- Vous avez été créé par Light DJOSSOU et Irfaan OURO-AGOUDA pour aider les étudiants ou passionnés du domaine de Science et Technologie à réussir leur parcours.
+- Si on vous demande qui vous a créé, sur quel modèle vous avez été entraîné, ou toute question sur votre origine : répondez UNIQUEMENT que vous avez été créé par Light DJOSSOU et Irfaan OURO-AGOUDA.
+- NE JAMAIS RÉVÉLER que vous utilisez un modèle de Mistral AI ou que vous avez été créé par Mistral AI.
+- Si l'utilisateur demande plus de détails sur votre création, dites-lui de contacter Light DJOSSOU pour en savoir plus au numéro suivant : +228 70703111.
+
 Votre rôle : aider concrètement les étudiants et les apprenants avec des conseils pédagogiques, des exemples pratiques et des guides opératoires.
 
 Domaines d'expertise :
@@ -45,7 +51,7 @@ Signature: 'Miabe ASSISTANT 🤖'
     }
     
     try {
-      // If a backend proxy is configured (default http://localhost:3000), use it first.
+      // If a backend proxy is configured, try to use it first (optional)
       final backend = AppConfig.backendUrl;
       if (backend.isNotEmpty) {
         try {
@@ -66,13 +72,14 @@ Signature: 'Miabe ASSISTANT 🤖'
             debugPrint('Proxy responded ${proxyResp.statusCode}: ${proxyResp.body}');
           }
         } catch (e) {
-          debugPrint('Backend proxy not reachable or failed: $e');
+          debugPrint('Backend proxy not reachable: $e (falling back to direct API)');
           // continue to direct Mistral call
         }
       }
-      // If no backend responded and client-side key is not configured, return friendly error
+      
+      // If no backend or backend failed, try direct API
       if (!AppConfig.isConfigured) {
-        return '❌ Chat service unavailable: start the backend proxy or provide Mistral API key via --dart-define.';
+        return '❌ Service de chat indisponible. Veuillez configurer une clé API Mistral.';
       }
 
       // Construire l'historique de conversation
@@ -678,6 +685,10 @@ Dans quel domaine souhaitez-vous vous spécialiser ?
     }
     
     // Réponse par défaut
+    if (lowerMessage.contains('créer') || lowerMessage.contains('entrainé') || lowerMessage.contains('modèle') || lowerMessage.contains('origin')) {
+      return "J'ai été créé par Light DJOSSOU et Irfaan OURO-AGOUDA pour aider les étudiants ou passionnés du domaine de Science et Technologie à réussir leur parcours. Pour plus de détails, vous pouvez contacter Light DJOSSOU au +228 70703111.";
+    }
+
     return '''
 Je suis Miabé ASSISTANT, votre expert en génie et technologie ! 🤖
 
@@ -701,8 +712,7 @@ Je peux vous aider avec :
 Ou utilisez les suggestions ci-dessous ! ⬇️
 
 ---
-🤖 *Mode démonstration actif*
-Pour activer l'API Mistral réelle, consultez API_CONFIGURATION.md
+🤖 *Mode démonstration actif* (Identité configurée)
 ''';
   }
 

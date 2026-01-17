@@ -4,10 +4,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:miabeassistant/constants/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:miabeassistant/pages/chat_page.dart';
 import 'package:miabeassistant/pages/resources_page.dart';
 import 'package:miabeassistant/pages/campus_page.dart';
+import 'package:miabeassistant/pages/competences_page.dart';
 import 'package:miabeassistant/pages/settings_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,10 +15,10 @@ class HomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   String _pseudo = 'Utilisateur';
 
@@ -56,13 +56,15 @@ class _HomePageState extends State<HomePage> {
       case 3:
         return const CampusPage();
       case 4:
+        return const CompetencesPage();
+      case 5:
         return const SettingsPage(title: 'Paramètres');
       default:
         return HomeContent(pseudo: _pseudo);
     }
   }
 
-  void _onItemTapped(int index) {
+  void onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
 
@@ -99,14 +101,14 @@ class _HomePageState extends State<HomePage> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               selectedIndex: _selectedIndex,
-              onDestinationSelected: _onItemTapped,
+              onDestinationSelected: onItemTapped,
               indicatorColor: AppTheme.primary.withValues(alpha: 0.12),
               destinations: const [
                 NavigationDestination(icon: FaIcon(FontAwesomeIcons.house, size: 20), selectedIcon: FaIcon(FontAwesomeIcons.house, size: 20, color: AppTheme.primary), label: 'Accueil'),
                 NavigationDestination(icon: FaIcon(FontAwesomeIcons.robot, size: 20), selectedIcon: FaIcon(FontAwesomeIcons.robot, size: 20, color: AppTheme.primary), label: 'Assistant'),
                 NavigationDestination(icon: FaIcon(FontAwesomeIcons.bookOpen, size: 20), selectedIcon: FaIcon(FontAwesomeIcons.bookOpen, size: 20, color: AppTheme.primary), label: 'Cours'),
                 NavigationDestination(icon: FaIcon(FontAwesomeIcons.users, size: 20), selectedIcon: FaIcon(FontAwesomeIcons.users, size: 20, color: AppTheme.primary), label: 'Campus'),
-                NavigationDestination(icon: FaIcon(FontAwesomeIcons.gear, size: 20), selectedIcon: FaIcon(FontAwesomeIcons.gear, size: 20, color: AppTheme.primary), label: 'Profil'),
+                NavigationDestination(icon: FaIcon(FontAwesomeIcons.lightbulb, size: 20), selectedIcon: FaIcon(FontAwesomeIcons.lightbulb, size: 20, color: AppTheme.primary), label: 'Skills'),
               ],
             ),
           ),
@@ -125,7 +127,6 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
-  String _selectedSkillCategory = 'Tout';
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -187,7 +188,7 @@ class _HomeContentState extends State<HomeContent> {
                              mainAxisSize: MainAxisSize.min,
                              children: [
                                Text(
-                                'Bonjour, ${widget.pseudo}',
+                                'Hi, ${widget.pseudo}',
                                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -195,7 +196,7 @@ class _HomeContentState extends State<HomeContent> {
                                ).animate().fadeIn().moveX(begin: -10, end: 0),
                                const SizedBox(height: 8),
                                Text(
-                                "Prêt à exceller aujourd'hui ?",
+                                'Miabé ASSISTANT - Votre compagnon pour réussir en Sciences et Technologies',
                                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                   color: Theme.of(context).hintColor,
                                   fontSize: 16,
@@ -213,93 +214,136 @@ class _HomeContentState extends State<HomeContent> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.notifications_none_rounded),
-              onPressed: () => Navigator.pushNamed(context, '/notifications'),
+              icon: const FaIcon(FontAwesomeIcons.circleUser, size: 22),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage(title: 'Paramètres')),
+                );
+              },
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 6),
           ],
         ),
         
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                 // Quick Actions
-                 Text('Accès Rapide', style: Theme.of(context).textTheme.titleLarge),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const double horizontalPadding = 24.0;
+              const double maxContentWidth = 920.0;
+              final double availableWidth = constraints.maxWidth;
+              final double contentWidth = availableWidth <= (maxContentWidth + horizontalPadding * 2)
+                  ? availableWidth - horizontalPadding * 2
+                  : maxContentWidth;
+
+              return Center(
+                child: SizedBox(
+                  width: contentWidth,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                 // Quick Actions - Main Features
+                 Text('Fonctionnalités Principales', style: Theme.of(context).textTheme.titleLarge),
                  const SizedBox(height: 16),
-                 Row(
-                   children: [
-                     Expanded(child: _buildQuickActionCard(context, 'Mes Cours', FontAwesomeIcons.bookOpen, AppTheme.primary, () => Navigator.pushNamed(context, '/resources'))),
-                     const SizedBox(width: 16),
-                     Expanded(child: _buildQuickActionCard(context, 'Mon Assistant', FontAwesomeIcons.robot, AppTheme.secondary, () => Navigator.pushNamed(context, '/chat'))),
-                   ],
-                 ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+                 
+                 _buildFeatureCard(
+                   context,
+                   'Assistant IA',
+                   'Posez vos questions et obtenez des réponses instantanées pour vous aider dans votre parcours académique',
+                   FontAwesomeIcons.robot,
+                   AppTheme.primary,
+                   1,
+                 ),
+                 const SizedBox(height: 12),
+                 
+                 _buildFeatureCard(
+                   context,
+                   'Ressources Pédagogiques',
+                   'Accédez à tous vos cours, TD et TP organisés par filière et semestre',
+                   FontAwesomeIcons.bookOpen,
+                   const Color(0xFF10B981),
+                   2,
+                 ),
+                 const SizedBox(height: 12),
+                 
+                 _buildFeatureCard(
+                   context,
+                   'Campus Collaboratif',
+                   'Échangez avec vos camarades, partagez des fiches et collaborez',
+                   FontAwesomeIcons.users,
+                   const Color(0xFF8B5CF6),
+                   3,
+                 ),
+                 const SizedBox(height: 12),
+                 
+                 _buildFeatureCard(
+                   context,
+                   'Développement de Compétences',
+                   'Découvrez des formations et plateformes pour renforcer vos compétences',
+                   FontAwesomeIcons.lightbulb,
+                   AppTheme.secondary,
+                   4,
+                 ),
                  
                  const SizedBox(height: 32),
                  
-                 // Skills Section
-                 Row(
-                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                   children: [
-                     Text('Compétences', style: Theme.of(context).textTheme.titleLarge),
-                     IconButton(icon: const Icon(Icons.tune, size: 20), onPressed: () {}),
-                   ],
-                 ),
-                 
-                 SingleChildScrollView(
-                   scrollDirection: Axis.horizontal,
-                   child: Row(
+                 // Call to Action
+                 Center(
+                   child: Column(
                      children: [
-                       _buildCategoryChip('Tout'),
-                       _buildCategoryChip('Général'),
-                       _buildCategoryChip('Programmation'),
-                       _buildCategoryChip('Génie Mécanique'),
-                       _buildCategoryChip('Langues'),
+                       Container(
+                         width: double.infinity,
+                         padding: const EdgeInsets.all(24),
+                         decoration: BoxDecoration(
+                           color: AppTheme.primary.withValues(alpha: 0.05),
+                           borderRadius: BorderRadius.circular(24),
+                           border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 1.5),
+                           boxShadow: [
+                             BoxShadow(
+                               color: AppTheme.primary.withValues(alpha: 0.1),
+                               blurRadius: 20,
+                               offset: const Offset(0, 10),
+                             ),
+                           ],
+                         ),
+                         child: Column(
+                           children: [
+                             const Icon(Icons.rocket_launch_rounded, size: 48, color: AppTheme.primary),
+                             const SizedBox(height: 16),
+                             Text(
+                               'Prêt à exceller ?',
+                               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                 fontWeight: FontWeight.bold,
+                                 color: AppTheme.primary,
+                               ),
+                               textAlign: TextAlign.center,
+                             ),
+                             const SizedBox(height: 12),
+                             Text(
+                               'Explorez toutes les fonctionnalités et atteignez vos objectifs académiques',
+                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                 color: Theme.of(context).hintColor,
+                               ),
+                               textAlign: TextAlign.center,
+                             ),
+                           ],
+                         ),
+                       ).animate().fadeIn(delay: 500.ms).scale(),
+                       
+                       const SizedBox(height: 24),
+                       
+                       Text(
+                         'Naviguez entre les onglets pour découvrir toutes les fonctionnalités',
+                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                           fontStyle: FontStyle.italic,
+                         ),
+                         textAlign: TextAlign.center,
+                       ).animate().fadeIn(duration: 2400.ms).slideY(),
                      ],
                    ),
-                 ),
-                 const SizedBox(height: 16),
-                 
-                 ..._getSkillsByCategory(context, _selectedSkillCategory),
-                 
-                 const SizedBox(height: 32),
-                 
-                 // Platforms
-                 Text("Plateformes d'apprentissage en ligne", style: Theme.of(context).textTheme.titleLarge),
-                 const SizedBox(height: 8),
-                 Text(
-                   'Découvrez les meilleures plateformes pour renforcer vos compétences techniques.',
-                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).hintColor),
-                 ),
-                 const SizedBox(height: 16),
-                 _buildLearningPlatformCard(context, title: 'DataCamp', description: "Apprenez la science des données et l'analyse avec Python, R et SQL.", icon: FontAwesomeIcons.chartLine, url: 'https://www.datacamp.com/'),
-                 const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: 'Moodle', description: "Plateforme d'apprentissage open source utilisée par les universités.", icon: FontAwesomeIcons.graduationCap, url: 'https://moodle.org/?lang=fr'),
-                 const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: 'SoloLearn', description: 'Apprenez à coder sur mobile avec des cours interactifs.', icon: FontAwesomeIcons.mobile, url: 'https://www.sololearn.com/en/'),
-                 const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: 'Coursera', description: 'Cours en ligne des meilleures universités mondiales.', icon: FontAwesomeIcons.buildingColumns, url: 'https://www.coursera.org/'),
-                 const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: 'freeCodeCamp', description: 'Apprenez le développement web gratuitement avec des projets pratiques.', icon: FontAwesomeIcons.code, url: 'https://www.freecodecamp.org/'),
-                 const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: 'HackerRank', description: 'Améliorez vos compétences en programmation grâce à des défis codés.', icon: FontAwesomeIcons.laptopCode, url: 'https://www.hackerrank.com/'),
-                 const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: 'OpenClassrooms', description: 'Formations en ligne avec mentorat pour obtenir des diplômes reconnus.', icon: FontAwesomeIcons.desktop, url: 'https://openclassrooms.com/fr/'),
-                 const SizedBox(height: 12),
-                 _buildLearningPlatformCard(context, title: 'Simplilearn', description: 'Formations certifiantes en digital skills et technologies émergentes.', icon: FontAwesomeIcons.rocket, url: 'https://www.simplilearn.com/'),
-                 
-                 const SizedBox(height: 24),
-                 
-                 Center(
-                   child: Text(
-                     'Explorez et réussissez avec Miabe Assistant !',
-                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                       fontStyle: FontStyle.italic,
-                     ),
-                   ).animate().fadeIn(duration: 2400.ms).slideY(),
                  ),
                  
                  // Bottom spacing for nav bar
@@ -307,169 +351,79 @@ class _HomeContentState extends State<HomeContent> {
               ],
             ),
           ),
+        )
+              );
+              
+      },
+    ),
         ),
       ],
     );
   }
 
-  Widget _buildQuickActionCard(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+
+  Widget _buildFeatureCard(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+    Color color,
+    int targetIndex,
+  ) {
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        // Navigate to the corresponding tab
+        final homePageState = context.findAncestorStateOfType<HomePageState>();
+        homePageState?.onItemTapped(targetIndex);
+      },
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 120,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).cardTheme.color,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
           boxShadow: AppTheme.cardShadow,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: FaIcon(icon, color: color, size: 20),
+              child: FaIcon(icon, color: color, size: 24),
             ),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).hintColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: color,
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildCategoryChip(String label) {
-    final isSelected = _selectedSkillCategory == label;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (bool selected) {
-          setState(() => _selectedSkillCategory = label);
-        },
-        selectedColor: AppTheme.primary.withValues(alpha: 0.1),
-        checkmarkColor: AppTheme.primary,
-        labelStyle: TextStyle(
-          color: isSelected ? AppTheme.primary : Theme.of(context).textTheme.bodyMedium?.color,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
-        ),
-        shape: RoundedRectangleBorder(
-           borderRadius: BorderRadius.circular(20),
-           side: BorderSide(color: isSelected ? AppTheme.primary : Theme.of(context).dividerColor),
-        ),
-        backgroundColor: Colors.transparent,
-        showCheckmark: false,
-      ),
-    );
-  }
-
-  List<Widget> _getSkillsByCategory(BuildContext context, String category) {
-    if (category == 'Tout') {
-      // Afficher toutes les compétences
-      return [
-        // Général
-        _buildSkillCard(context, "Test d'anglais", 'Passez un test EF SET et obtenez un certificat reconnu internationalement.', FontAwesomeIcons.language, 'https://www.efset.org/english-certificate/'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Test de QI', 'Évaluez votre intelligence avec le test BMI Certified IQ.', FontAwesomeIcons.brain, 'https://www.test-iq.org/take-the-iq-test-now/'),
-        const SizedBox(height: 10),
-        // Programmation
-        _buildSkillCard(context, 'Apprendre le développement web', 'Créez votre site web avec HTML5 & CSS3', FontAwesomeIcons.html5, 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Programmation Python', 'Apprendre les bases du langage Python', FontAwesomeIcons.python, 'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Développement mobile avec Flutter', 'Suivez une formation complète sur Flutter pour créer des apps Android/iOS.', FontAwesomeIcons.flutter, 'https://www.youtube.com/playlist?list=PLhi8DXg8yPWbQHwZ9WZtBJ3FGiB72qFkE'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Maîtriser Git & Github', 'Gérez du code avec Git et Github', FontAwesomeIcons.git, 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Linux', 'Initiez-vous à Linux', FontAwesomeIcons.linux, 'https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux'),
-        const SizedBox(height: 10),
-        // Génie Mécanique
-        _buildSkillCard(context, 'Apprendre à utiliser FreeCAD', 'Maîtrisez la modélisation 3D open-source.', FontAwesomeIcons.cube, 'https://gtnyqqstqfwvncnymptm.supabase.co/storage/v1/object/public/resources/competences/FREECAD_Cours.pdf'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Simulations Mécaniques', 'Expérimentez avec des simulations interactives Phet.', FontAwesomeIcons.gears, 'https://phet.colorado.edu/fr/simulations/filter?subjects=physics&type=html,prototype'),
-      ];
-    } else if (category == 'Général') {
-      return [
-        _buildSkillCard(context, "Test d'anglais", 'Passez un test EF SET et obtenez un certificat reconnu internationalement.', FontAwesomeIcons.language, 'https://www.efset.org/english-certificate/'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Test de QI', 'Évaluez votre intelligence avec le test BMI Certified IQ.', FontAwesomeIcons.brain, 'https://www.test-iq.org/take-the-iq-test-now/'),
-      ];
-    } else if (category == 'Programmation') {
-      return [
-        _buildSkillCard(context, 'Apprendre le développement web', 'Créez votre site web avec HTML5 & CSS3', FontAwesomeIcons.html5, 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Apprendre à programmer avec JavaScript', 'Maîtriser les bases et la logique de la programmation JavaScript', FontAwesomeIcons.js, 'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Programmation Python', 'Apprendre les bases du langage Python', FontAwesomeIcons.python, 'https://openclassrooms.com/fr/courses/7168871-apprenez-les-bases-du-langage-python'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Programmation C', 'Apprendre les bases du langage C', FontAwesomeIcons.c, 'https://openclassrooms.com/fr/courses/19980-apprenez-a-programmer-en-c'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Développement mobile avec Flutter', 'Suivez une formation complète sur Flutter pour créer des apps Android/iOS.', FontAwesomeIcons.flutter, 'https://www.youtube.com/playlist?list=PLhi8DXg8yPWbQHwZ9WZtBJ3FGiB72qFkE'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Maîtriser Git & Github', 'Gérez du code avec Git et Github', FontAwesomeIcons.git, 'https://openclassrooms.com/fr/courses/1603881-creez-votre-site-web-avec-html5-et-css3'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Linux', 'Initiez-vous à Linux', FontAwesomeIcons.linux, 'https://openclassrooms.com/fr/courses/7170491-initiez-vous-a-linux'),
-      ];
-    } else if (category == 'Génie Mécanique') {
-      return [
-        _buildSkillCard(context, 'Apprendre à utiliser FreeCAD', 'Maîtrisez la modélisation 3D open-source.', FontAwesomeIcons.cube, 'https://gtnyqqstqfwvncnymptm.supabase.co/storage/v1/object/public/resources/competences/FREECAD_Cours.pdf'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, 'Simulations Mécaniques', 'Expérimentez avec des simulations interactives Phet.', FontAwesomeIcons.gears, 'https://phet.colorado.edu/fr/simulations/filter?subjects=physics&type=html,prototype'),
-      ];
-    } else if (category == 'Langues') {
-      return [
-        _buildSkillCard(context, 'Anglais Technique', 'TOEIC/TOEFL', FontAwesomeIcons.language, 'https://ets.org'),
-        const SizedBox(height: 10),
-        _buildSkillCard(context, "Test d'anglais EF SET", 'Certificat reconnu internationalement', FontAwesomeIcons.language, 'https://www.efset.org/english-certificate/'),
-      ];
-    }
-    return [
-       _buildSkillCard(context, 'Gestion de Projet', 'Agile & Scrum', FontAwesomeIcons.listCheck, 'https://scrum.org'),
-       const SizedBox(height: 10),
-       _buildSkillCard(context, "Test d'anglais", 'TOEIC/TOEFL', FontAwesomeIcons.language, 'https://ets.org'),
-    ];
-  }
-
-  Widget _buildSkillCard(BuildContext context, String title, String subtitle, IconData icon, String url) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: FaIcon(icon, color: AppTheme.primary, size: 20),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-        trailing: Icon(Icons.arrow_forward_ios, size: 14, color: Theme.of(context).hintColor),
-        onTap: () async {
-            final uri = Uri.parse(url);
-            if (await canLaunchUrl(uri)) await launchUrl(uri);
-        },
-      ),
     ).animate().fadeIn().slideX(begin: 0.1, end: 0);
-  }
-  
-  Widget _buildLearningPlatformCard(BuildContext context, {required String title, required String description, required IconData icon, required String url}) {
-    return _buildSkillCard(context, title, description, icon, url);
   }
 }

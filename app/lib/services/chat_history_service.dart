@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:miabeassistant/pages/chat_page.dart'; // import for ChatMessage class if needed, or duplicate/move model
+// import for ChatMessage class if needed, or duplicate/move model
 
 // Define ChatMessage model here if it's not exported globally, or move to a model file.
 // Assuming ChatMessage is in chat_page.dart, but importing a page file for a model is bad practice.

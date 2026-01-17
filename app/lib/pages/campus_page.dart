@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import 'package:miabeassistant/pages/post_detail_page.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import '../widgets/document_mention_field.dart';
+import '../widgets/mention_text.dart';
+import '../constants/app_theme.dart';
 
 /// Page Campus Collaboratif - Apprentissage entre pairs
 // Diacritic package removed — using internal sanitization instead.
@@ -30,17 +29,15 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
   String? _userId;
   bool _isLoading = true;
   List<Map<String, dynamic>> _posts = [];
-  List<Map<String, dynamic>> _fiches = [];
   int _membersCount = 0;
   RealtimeChannel? _membersSubscription;
   List<Map<String, dynamic>> _filteredPosts = [];
-  List<Map<String, dynamic>> _filteredFiches = [];
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _loadUserProfile();
     
     // Écouter les changements d'état d'authentification Firebase
@@ -89,7 +86,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
   }
 
   Future<void> _loadCampusData() async {
-    // Charger les posts et fiches depuis Supabase
+    // Charger les posts depuis Supabase
     try {
       final supabase = Supabase.instance.client;
 
@@ -102,20 +99,9 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
           .order('created_at', ascending: false)
           .limit(50);
 
-      // Charger les fiches partagées
-      final fichesResponse = await supabase
-          .from('campus_fiches')
-          .select()
-          .eq('filiere', _userFiliere!)
-          .eq('semestre', _userSemestre!)
-          .order('created_at', ascending: false)
-          .limit(50);
-
       setState(() {
         _posts = List<Map<String, dynamic>>.from(postsResponse as List<dynamic>);
-        _fiches = List<Map<String, dynamic>>.from(fichesResponse as List<dynamic>);
         _filteredPosts = _posts;
-        _filteredFiches = _fiches;
       });
 
       _updateMembership();
@@ -195,16 +181,10 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
     setState(() {
       if (query.isEmpty) {
         _filteredPosts = _posts;
-        _filteredFiches = _fiches;
       } else {
         _filteredPosts = _posts.where((post) {
           return post['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
               post['content'].toString().toLowerCase().contains(query.toLowerCase());
-        }).toList();
-
-        _filteredFiches = _fiches.where((fiche) {
-          return fiche['titre'].toString().toLowerCase().contains(query.toLowerCase()) ||
-              (fiche['description']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false);
         }).toList();
       }
     });
@@ -260,7 +240,7 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(130),
+          preferredSize: const Size.fromHeight(160),
           child: Column(
             children: [
               Padding(
@@ -292,7 +272,6 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                 controller: _tabController,
                 tabs: const [
                   Tab(icon: Icon(Icons.forum), text: 'Discussions'),
-                  Tab(icon: Icon(Icons.description), text: 'Fichiers'),
                   Tab(icon: Icon(Icons.people), text: 'Communauté'),
                 ],
               ),
@@ -304,14 +283,13 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
         controller: _tabController,
         children: [
           _buildDiscussionsTab(),
-          _buildFichesTab(),
           _buildCommunityTab(),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('Partager'),
+        label: const Text('Discuter'),
       ),
     );
   }
@@ -548,29 +526,6 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
     );
   }
 
-  // Onglet Fiches
-  Widget _buildFichesTab() {
-    return RefreshIndicator(
-      onRefresh: _loadCampusData,
-      child: _filteredFiches.isEmpty
-          ? _buildEmptyState(
-              icon: Icons.description,
-              title: 'Aucune fiche partagée',
-              message: _searchController.text.isNotEmpty
-                  ? 'Aucun résultat pour votre recherche'
-                  : 'Partagez vos fiches de révision avec vos camarades !',
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _filteredFiches.length,
-              itemBuilder: (context, index) {
-                final fiche = _filteredFiches[index];
-                return _buildFicheCard(fiche);
-              },
-            ),
-    );
-  }
-
   // Onglet Communauté
   Widget _buildCommunityTab() {
     return ListView(
@@ -590,9 +545,49 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
     );
   }
 
+  Future<void> _deletePost(String postId) async {
+    try {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Supprimer la publication'),
+          content: const Text('Êtes-vous sûr de vouloir supprimer cette publication ? Cette action est irréversible.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Supprimer'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        await Supabase.instance.client
+            .from('campus_posts')
+            .delete()
+            .eq('id', postId);
+        
+        _loadCampusData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Publication supprimée')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Erreur suppression post: $e');
+    }
+  }
+
   Widget _buildPostCard(Map<String, dynamic> post) {
     final createdAt = DateTime.parse(post['created_at'] ?? DateTime.now().toIso8601String());
     final timeAgo = _getTimeAgo(createdAt);
+    final isAuthor = _userId == post['author_id'];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -637,6 +632,27 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                       backgroundColor: _getTypeColor(post['type']),
                       padding: EdgeInsets.zero,
                     ),
+                  if (isAuthor)
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, size: 20),
+                      onSelected: (value) {
+                        if (value == 'delete') {
+                          _deletePost(post['id']);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red, size: 20),
+                              SizedBox(width: 8),
+                              Text('Supprimer', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -649,11 +665,45 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
               ),
               if (post['content'] != null) ...[
                 const SizedBox(height: 8),
-                Text(
-                  post['content'],
+                MentionText(
+                  text: post['content'],
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: Colors.grey[700]),
+                ),
+              ],
+              if (post['type'] == 'file_share' && post['attachment_url'] != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _getFileIcon(post['attachment_type'] ?? ''),
+                        color: AppTheme.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          post['attachment_name'] ?? 'Fichier joint',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Icon(Icons.download, size: 18, color: AppTheme.primary),
+                    ],
+                  ),
                 ),
               ],
               const SizedBox(height: 12),
@@ -675,67 +725,6 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildFicheCard(Map<String, dynamic> fiche) {
-    final createdAt = DateTime.parse(fiche['created_at'] ?? DateTime.now().toIso8601String());
-    final timeAgo = _getTimeAgo(createdAt);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => _showFicheDetails(fiche),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.orange[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.description, color: Colors.orange),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      fiche['title'] ?? 'Sans titre',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Par ${fiche['author'] ?? 'Anonyme'} • $timeAgo',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    if (fiche['matiere'] != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        fiche['matiere'],
-                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Row(
-                children: [
-                  Icon(Icons.download, size: 18, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text('${fiche['downloads'] ?? 0}'),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildInfoCard({
     required IconData icon,
@@ -801,12 +790,6 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                   label: 'Discussions',
                   value: '${_posts.length}',
                   color: Colors.blue,
-                ),
-                _buildStatItem(
-                  icon: Icons.description,
-                  label: 'Fiches',
-                  value: '${_fiches.length}',
-                  color: Colors.orange,
                 ),
                 _buildStatItem(
                   icon: Icons.people,
@@ -900,18 +883,18 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Règles de la communauté'),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Respectez vos camarades'),
-              const SizedBox(height: 8),
-              const Text('Partagez du contenu de qualité'),
-              const SizedBox(height: 8),
-              const Text('Entraidez-vous mutuellement'),
-              const SizedBox(height: 12),
-              const Text('🔒 Anonymat préservé : Seul votre pseudo est visible dans la communauté.'),
+              Text('Respectez vos camarades'),
+              SizedBox(height: 8),
+              Text('Partagez du contenu de qualité'),
+              SizedBox(height: 8),
+              Text('Entraidez-vous mutuellement'),
+              SizedBox(height: 12),
+              Text('🔒 Anonymat préservé : Seul votre pseudo est visible dans la communauté.'),
             ],
           ),
         ),
@@ -997,44 +980,66 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
   void _showCreateDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Que voulez-vous partager ?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            ListTile(
-              leading: const Icon(Icons.forum, color: Colors.blue),
-              title: const Text('Poser une question'),
-              subtitle: const Text('Demandez de l\'aide à la communauté'),
-              onTap: () {
-                Navigator.pop(context);
-                _showCreatePostDialog('question');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.lightbulb, color: Colors.green),
-              title: const Text('Partager un conseil'),
-              subtitle: const Text('Aidez vos camarades'),
-              onTap: () {
-                Navigator.pop(context);
-                _showCreatePostDialog('conseil');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.description, color: Colors.orange),
-              title: const Text('Partager une fiche'),
-              subtitle: const Text('Partagez vos fiches de révision'),
-              onTap: () {
-                Navigator.pop(context);
-                _showCreateFicheDialog();
-              },
-            ),
-          ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Que voulez-vous partager ?',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Choisissez le type de contenu à partager avec votre communauté',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.forum, color: Colors.blue),
+                ),
+                title: const Text('Poser une question'),
+                subtitle: const Text('Demandez de l\'aide à la communauté\n💡 Astuce : Utilisez @ pour mentionner un document'),
+                isThreeLine: true,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreatePostDialog('question');
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.lightbulb, color: Colors.green),
+                ),
+                title: const Text('Partager un conseil'),
+                subtitle: const Text('Aidez vos camarades avec vos astuces'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreatePostDialog('conseil');
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1043,7 +1048,6 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
   void _showCreatePostDialog(String type) {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
-    PlatformFile? attachedFile;
 
     showDialog(
       context: context,
@@ -1063,60 +1067,16 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                   maxLength: 100,
                 ),
                 const SizedBox(height: 16),
-                TextField(
+                DocumentMentionField(
                   controller: contentController,
-                  decoration: const InputDecoration(
-                    labelText: 'Contenu',
-                    border: OutlineInputBorder(),
-                  ),
+                  labelText: type == 'question' ? 'Détails de votre question' : 'Contenu du conseil',
+                  hintText: type == 'question'
+                      ? 'Expliquez votre problème ici...'
+                      : 'Partagez votre astuce avec la communauté...',
+                  helperText: '💡 Utilisez @ devant un mot-clé pour référencer un document (ex: @algorithme)',
                   maxLines: 5,
                   maxLength: 500,
                 ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    FilePickerResult? result = await FilePicker.platform.pickFiles(
-                      type: FileType.custom,
-                      allowedExtensions: ['pdf', 'jpg', 'png', 'doc', 'docx'],
-                      withData: true,
-                    );
-
-                    if (result != null) {
-                      setDialogState(() {
-                        attachedFile = result.files.first;
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.attach_file),
-                  label: Text(
-                    attachedFile == null 
-                        ? 'Joindre un fichier (optionnel)' 
-                        : attachedFile!.name,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (attachedFile != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${(attachedFile!.size / 1024).toStringAsFixed(1)} KB',
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, size: 18),
-                          onPressed: () {
-                            setDialogState(() {
-                              attachedFile = null;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),
@@ -1125,161 +1085,19 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
               onPressed: () => Navigator.pop(context),
               child: const Text('Annuler'),
             ),
-          ElevatedButton(
-            onPressed: () async {
-              if (titleController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Veuillez saisir un titre')),
-                );
-                return;
-              }
-
-              try {
-                final supabase = Supabase.instance.client;
-                String? attachmentUrl;
-                String? attachmentName;
-                String? attachmentType;
-
-                // Upload du fichier joint si présent
-                if (attachedFile != null) {
-                  if (_userFiliere == null || _userSemestre == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Complétez votre profil (filière et semestre) avant de partager un fichier')),
-                    );
-                    return;
-                  }
-
-                  final extension = attachedFile!.extension ?? 'file';
-                  final sanitizedFileName = _sanitizePath('${DateTime.now().millisecondsSinceEpoch}_${attachedFile!.name}');
-                  final sanitizedFiliere = _sanitizePath(_userFiliere!);
-                  final sanitizedSemestre = _sanitizePath(_userSemestre!);
-                  final storagePath = 'campus_attachments/$sanitizedFiliere/$sanitizedSemestre/$sanitizedFileName';
-                  final backend = AppConfig.backendUrl;
-
-                  if (backend.isNotEmpty) {
-                    // Proxy upload via backend (accepts base64)
-                    try {
-                      String base64Content;
-                      String contentType = 'application/octet-stream';
-
-                      if (kIsWeb) {
-                        if (attachedFile!.bytes == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
-                          );
-                          return;
-                        }
-                        base64Content = base64Encode(attachedFile!.bytes!);
-                        contentType = attachedFile!.extension ?? contentType;
-                      } else {
-                        final filePathOnDisk = attachedFile!.path;
-                        if (filePathOnDisk == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Chemin de fichier introuvable')),
-                          );
-                          return;
-                        }
-                        final file = File(filePathOnDisk);
-                        final bytes = await file.readAsBytes();
-                        base64Content = base64Encode(bytes);
-                      }
-
-                      final resp = await http.post(
-                        Uri.parse('$backend/api/upload'),
-                        headers: {'Content-Type': 'application/json'},
-                        body: jsonEncode({
-                          'bucket': 'campus_files',
-                          'path': storagePath,
-                          'content_base64': base64Content,
-                          'content_type': extension,
-                        }),
-                      );
-
-                      if (resp.statusCode >= 200 && resp.statusCode < 300) {
-                        final j = jsonDecode(resp.body);
-                        attachmentUrl = j['publicUrl'];
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Upload failed: ${resp.statusCode} ${resp.body}')),
-                        );
-                        return;
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur upload: $e')),
-                      );
-                      return;
-                    }
-                  } else {
-                    // Require Supabase auth session for uploads. If no supabase user, inform the user.
-                    if (Supabase.instance.client.auth.currentUser == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Veuillez vous connecter (Supabase) avant de partager un fichier')),
-                      );
-                      return;
-                    }
-
-                    if (kIsWeb) {
-                      if (attachedFile!.bytes == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
-                        );
-                        return;
-                      }
-                      await supabase.storage
-                          .from('campus_files')
-                          .uploadBinary(storagePath, attachedFile!.bytes!);
-                    } else {
-                      final filePathOnDisk = attachedFile!.path;
-                      if (filePathOnDisk == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Chemin de fichier introuvable')),
-                        );
-                        return;
-                      }
-                      final file = File(filePathOnDisk);
-                      await supabase.storage
-                          .from('campus_files')
-                          .upload(storagePath, file);
-                    }
-
-                    attachmentUrl = supabase.storage
-                        .from('campus_files')
-                        .getPublicUrl(storagePath);
-                  }
-                  
-                  attachmentName = attachedFile!.name;
-                  attachmentType = attachedFile!.extension ?? 'unknown';
+            ElevatedButton(
+              onPressed: () async {
+                if (titleController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Veuillez saisir un titre')),
+                  );
+                  return;
                 }
 
-                // Insert post via backend when available to avoid client RLS issues
-                final backend = AppConfig.backendUrl;
-                if (backend.isNotEmpty) {
-                  final resp = await http.post(
-                    Uri.parse('$backend/api/posts'),
-                    headers: {'Content-Type': 'application/json'},
-                    body: jsonEncode({
-                      'filiere': _userFiliere,
-                      'semestre': _userSemestre,
-                      'author': _userPseudo,
-                      'author_id': _userId,
-                      'type': type,
-                      'title': titleController.text.trim(),
-                      'content': contentController.text.trim(),
-                      'attachment_url': attachmentUrl,
-                      'attachment_name': attachmentName,
-                      'attachment_type': attachmentType,
-                      'likes': 0,
-                      'comments_count': 0,
-                    }),
-                  );
-                  if (!(resp.statusCode >= 200 && resp.statusCode < 300)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Erreur création post: ${resp.statusCode} ${resp.body}')),
-                    );
-                    return;
-                  }
-                } else {
+                try {
+                  final supabase = Supabase.instance.client;
+
+                  // Insert post directly via Supabase (RLS policies allow public insert)
                   await supabase.from('campus_posts').insert({
                     'filiere': _userFiliere,
                     'semestre': _userSemestre,
@@ -1288,29 +1106,25 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
                     'type': type,
                     'title': titleController.text.trim(),
                     'content': contentController.text.trim(),
-                    'attachment_url': attachmentUrl,
-                    'attachment_name': attachmentName,
-                    'attachment_type': attachmentType,
                     'likes': 0,
                     'comments_count': 0,
                   });
-                }
 
-                Navigator.pop(context);
-                _loadCampusData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Publication créée avec succès !')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Erreur: $e')),
-                );
-              }
-            },
-            child: const Text('Publier'),
-          ),
-        ],
-      ),
+                  Navigator.pop(context);
+                  _loadCampusData();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Publication créée avec succès !')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur: $e')),
+                  );
+                }
+              },
+              child: const Text('Publier'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1324,275 +1138,20 @@ class _CampusPageState extends State<CampusPage> with SingleTickerProviderStateM
     ).then((_) => _loadCampusData()); // Recharger après retour
   }
 
-  void _showFicheDetails(Map<String, dynamic> fiche) async {
-    try {
-      // Incrémenter le compteur de téléchargements
-      await Supabase.instance.client
-          .from('campus_fiches')
-          .update({'downloads': (fiche['downloads'] ?? 0) + 1})
-          .eq('id', fiche['id']);
-
-      // Ouvrir le fichier
-      final url = Uri.parse(fiche['file_url']);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Impossible d\'ouvrir le fichier')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
-      }
+  IconData _getFileIcon(String fileType) {
+    switch (fileType.toLowerCase()) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'doc':
+      case 'docx':
+        return Icons.description;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+        return Icons.image;
+      default:
+        return Icons.attach_file;
     }
   }
-
-  void _showCreateFicheDialog() async {
-    final titreController = TextEditingController();
-    final matiereController = TextEditingController();
-    final descriptionController = TextEditingController();
-    PlatformFile? selectedFile;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Partager une fiche'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titreController,
-                  decoration: const InputDecoration(
-                    labelText: 'Titre',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: matiereController,
-                  decoration: const InputDecoration(
-                    labelText: 'Matière',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    FilePickerResult? result = await FilePicker.platform.pickFiles(
-                      type: FileType.custom,
-                      allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png'],
-                      withData: true,
-                    );
-
-                    if (result != null) {
-                      setDialogState(() {
-                        selectedFile = result.files.first;
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.attach_file),
-                  label: Text(selectedFile == null 
-                      ? 'Sélectionner un fichier' 
-                      : selectedFile!.name),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (titreController.text.trim().isEmpty || 
-                    matiereController.text.trim().isEmpty ||
-                    selectedFile == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Veuillez remplir tous les champs')),
-                  );
-                  return;
-                }
-
-                try {
-                  // Upload du fichier vers Supabase Storage
-                  if (_userFiliere == null || _userSemestre == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Complétez votre profil (filière et semestre) avant de partager une fiche')),
-                    );
-                    return;
-                  }
-
-                  final extension = selectedFile!.extension ?? 'file';
-                  final sanitizedFileName = _sanitizePath('${DateTime.now().millisecondsSinceEpoch}_${selectedFile!.name}');
-                  final sanitizedFiliere = _sanitizePath(_userFiliere!);
-                  final sanitizedSemestre = _sanitizePath(_userSemestre!);
-                  final storagePath = 'campus_fiches/$sanitizedFiliere/$sanitizedSemestre/$sanitizedFileName';
-
-                  final backend = AppConfig.backendUrl;
-
-                  String fileUrl;
-                  if (backend.isNotEmpty) {
-                    try {
-                      String base64Content;
-                      if (kIsWeb) {
-                        if (selectedFile!.bytes == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
-                          );
-                          return;
-                        }
-                        base64Content = base64Encode(selectedFile!.bytes!);
-                      } else {
-                        final filePathOnDisk = selectedFile!.path;
-                        if (filePathOnDisk == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Chemin de fichier introuvable')),
-                          );
-                          return;
-                        }
-                        final file = File(filePathOnDisk);
-                        final bytes = await file.readAsBytes();
-                        base64Content = base64Encode(bytes);
-                      }
-
-                      final resp = await http.post(
-                        Uri.parse('$backend/api/upload'),
-                        headers: {'Content-Type': 'application/json'},
-                        body: jsonEncode({
-                          'bucket': 'campus_files',
-                          'path': storagePath,
-                          'content_base64': base64Content,
-                          'content_type': extension,
-                        }),
-                      );
-
-                      if (resp.statusCode >= 200 && resp.statusCode < 300) {
-                        final j = jsonDecode(resp.body);
-                        fileUrl = j['publicUrl'];
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Upload failed: ${resp.statusCode} ${resp.body}')),
-                        );
-                        return;
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur upload: $e')),
-                      );
-                      return;
-                    }
-                  } else {
-                    // Require Supabase auth session for uploads. If no supabase user, inform the user.
-                    if (Supabase.instance.client.auth.currentUser == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Veuillez vous connecter avant de partager une fiche')),
-                      );
-                      return;
-                    }
-
-                    if (kIsWeb) {
-                      if (selectedFile!.bytes == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Aucun contenu trouvé pour ce fichier (web)')),
-                        );
-                        return;
-                      }
-                      await Supabase.instance.client.storage
-                          .from('campus_files')
-                          .uploadBinary(storagePath, selectedFile!.bytes!);
-                    } else {
-                      final filePathOnDisk = selectedFile!.path;
-                      if (filePathOnDisk == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Chemin de fichier introuvable')),
-                        );
-                        return;
-                      }
-                      final file = File(filePathOnDisk);
-                      await Supabase.instance.client.storage
-                          .from('campus_files')
-                          .upload(storagePath, file);
-                    }
-
-                    fileUrl = Supabase.instance.client.storage
-                        .from('campus_files')
-                        .getPublicUrl(storagePath);
-                  }
-
-                  // Enregistrer dans la base de données (via backend proxy if available)
-                  if (backend.isNotEmpty) {
-                    final resp = await http.post(
-                      Uri.parse('$backend/api/fiches'),
-                      headers: {'Content-Type': 'application/json'},
-                      body: jsonEncode({
-                        'filiere': _userFiliere,
-                        'semestre': _userSemestre,
-                        'matiere': matiereController.text.trim(),
-                        'titre': titreController.text.trim(),
-                        'description': descriptionController.text.trim(),
-                        'author': _userPseudo,
-                        'author_id': _userId,
-                        'file_url': fileUrl,
-                        'file_name': selectedFile!.name,
-                        'file_type': selectedFile!.extension ?? 'unknown',
-                        'file_size': selectedFile!.size,
-                      }),
-                    );
-                    if (!(resp.statusCode >= 200 && resp.statusCode < 300)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur enregistrement fiche: ${resp.statusCode} ${resp.body}')),
-                      );
-                      return;
-                    }
-                  } else {
-                    await Supabase.instance.client.from('campus_fiches').insert({
-                      'filiere': _userFiliere,
-                      'semestre': _userSemestre,
-                      'matiere': matiereController.text.trim(),
-                      'titre': titreController.text.trim(),
-                      'description': descriptionController.text.trim(),
-                      'author': _userPseudo,
-                      'author_id': _userId,
-                      'file_url': fileUrl,
-                      'file_name': selectedFile!.name,
-                      'file_type': selectedFile!.extension ?? 'unknown',
-                      'file_size': selectedFile!.size,
-                    });
-                  }
-
-                  Navigator.pop(context);
-                  _loadCampusData();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Fiche partagée avec succès !')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Erreur: $e')),
-                  );
-                }
-              },
-              child: const Text('Partager'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
+

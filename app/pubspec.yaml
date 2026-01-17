@@ -1,6 +1,6 @@
 name: miabeassistant
 description: "Miabé ASSISTANT - Votre compagnon pour les études d'ingénierie et de technologie."
-version: 2.0.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ^3.9.2

@@ -138,6 +138,9 @@ class _ResourcesPageState extends State<ResourcesPage> {
   Widget _buildCurrentStep() {
     if (selectedFiliere == null) {
       return _buildFiliereSelection();
+    } else if (selectedFiliere!['id'] == 'all_subjects') {
+      // Cas spécial pour le dossier "Tout"
+      return selectedMatiere == null ? _buildAllMatieresSelection() : _buildPdfSelection();
     } else if (selectedSemestre == null) {
       return _buildSemestreSelection();
     } else if (selectedMatiere == null) {
@@ -148,25 +151,89 @@ class _ResourcesPageState extends State<ResourcesPage> {
   }
 
   Widget _buildFiliereSelection() {
-    return ListView.builder(
+    return ListView(
       padding: const EdgeInsets.all(16.0),
-      itemCount: filieres.length,
-      itemBuilder: (context, index) {
-        final filiere = filieres[index];
-        return _buildCard(
-          title: _getFiliereDisplayName(filiere['name']),
-          subtitle: "${filiere["semestres"].length} semestres",
-          icon: Icons.school_outlined,
+      children: [
+        // Dossier "Tout"
+        _buildCard(
+          title: 'Tout',
+          subtitle: 'Toutes les unités d\'enseignement',
+          icon: Icons.folder_copy_outlined,
           onTap: () {
             setState(() {
-              selectedFiliere = filiere;
+              selectedFiliere = {'id': 'all_subjects', 'name': 'Tout'};
               selectedSemestre = null;
               selectedMatiere = null;
             });
           },
-          delay: index * 50,
-        );
-      },
+          delay: 0,
+        ),
+        
+        ...List.generate(filieres.length, (index) {
+          final filiere = filieres[index];
+          return _buildCard(
+            title: _getFiliereDisplayName(filiere['name']),
+            subtitle: "${filiere["semestres"].length} semestres",
+            icon: Icons.school_outlined,
+            onTap: () {
+              setState(() {
+                selectedFiliere = filiere;
+                selectedSemestre = null;
+                selectedMatiere = null;
+              });
+            },
+            delay: (index + 1) * 50,
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildAllMatieresSelection() {
+    // Aplatir toutes les matières de toutes les filières et semestres
+    final allMatieres = <Map<String, dynamic>>[];
+    final seenNames = <String>{};
+    
+    for (var filiere in filieres) {
+      for (var semestre in filiere['semestres']) {
+        for (var matiere in semestre['matieres']) {
+          final name = matiere['name'].toString().toUpperCase();
+          if (!seenNames.contains(name)) {
+            seenNames.add(name);
+            allMatieres.add(matiere);
+          }
+        }
+      }
+    }
+    
+    // Trier par ordre alphabétique
+    allMatieres.sort((a, b) => a['name'].toString().compareTo(b['name'].toString()));
+
+    return Column(
+      children: [
+        _buildHeader('Toutes les matières', () => setState(() => selectedFiliere = null)),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16.0),
+            itemCount: allMatieres.length,
+            itemBuilder: (context, index) {
+              final matiere = allMatieres[index];
+              return _buildCard(
+                title: matiere['name'].toUpperCase(),
+                icon: Icons.book_outlined,
+                onTap: () {
+                  setState(() {
+                    selectedMatiere = matiere;
+                    // On simule un semestre pour l'affichage correct dans _buildPdfSelection
+                    selectedSemestre = {'name': 'Tous niveaux'}; 
+                  });
+                },
+                delay: index * 30, // Délai plus court car la liste peut être longue
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

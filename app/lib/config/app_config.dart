@@ -19,10 +19,10 @@ class AppConfig {
            ApiKeys.mistralApiKey != 'YOUR_MISTRAL_API_KEY_HERE';
   }
   
-  // Optional backend proxy URL used to proxy Mistral requests (recommended)
-  // Default to localhost for development. Set via --dart-define=BACKEND_URL=https://api.example.com
+  // Optional backend proxy URL used to proxy Mistral requests (optional)
+  // Default to empty (use direct API). Set via --dart-define=BACKEND_URL=https://your-backend.com if using backend proxy
   static String get backendUrl {
-    const url = String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:3000');
+    const url = String.fromEnvironment('BACKEND_URL', defaultValue: '');
     return url;
   }
 }

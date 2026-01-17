@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:miabeassistant/constants/app_constants.dart'; // Ensure this matches your project structure
+// Ensure this matches your project structure
 
 // You can run this script with `dart run scripts/upload_resources.dart`
 // Make sure you have the supabase_flutter and dotenv dependencies if needed, 
@@ -23,7 +23,7 @@ void main() async {
 
   final supabase = SupabaseClient(supabaseUrl, supabaseKey);
 
-  final filePath = '../../resources/competences/FREECAD_Cours.pdf';
+  const filePath = '../../resources/competences/FREECAD_Cours.pdf';
   final file = File(filePath);
 
   if (!file.existsSync()) {
@@ -35,7 +35,7 @@ void main() async {
 
   try {
     print('🚀 Uploading ${file.path}...');
-    final fileName = 'competences/FREECAD_Cours.pdf';
+    const fileName = 'competences/FREECAD_Cours.pdf';
     
     // Read file bytes
     final fileBytes = await file.readAsBytes();

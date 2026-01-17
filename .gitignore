@@ -81,3 +81,11 @@ app/lib/config/api_keys.dart
 build/
 .dart_tool/
 .flutter-plugins-dependencies
+
+# python auto-generated files
+__pycache__/
+*.py[cod]
+*.py
+
+# sql database files
+.sql

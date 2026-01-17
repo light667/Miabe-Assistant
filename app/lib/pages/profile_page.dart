@@ -17,6 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String _email = 'Chargement...';
   String _filiere = 'Chargement...';
   String _semestre = 'Chargement...';
+  bool _shouldRedirect = false;
 
   @override
   void initState() {
@@ -54,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
         toolbarHeight: 56,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, _shouldRedirect),
         ),
         title: const Text('Profil'),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -127,8 +128,13 @@ class _ProfilePageState extends State<ProfilePage> {
             Center(
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/edit_profile').then((_) {
+                  Navigator.pushNamed(context, '/edit_profile').then((result) {
                     _loadUserData();
+                    if (result == true) {
+                      setState(() {
+                        _shouldRedirect = true;
+                      });
+                    }
                   });
                 },
                 icon: const FaIcon(
